@@ -5,8 +5,8 @@ class Player:
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
-        self.thrust_power = 0.3
-        self.friction = 0.97
+        self.thrust_power = 0.8
+        self.friction = 0.95
         self.max_speed = 8
         self.ship_size = 20
 

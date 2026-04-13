@@ -1,5 +1,6 @@
 from settings import *
 from player import Player
+from enemy import SeekerEnemy, ShooterEnemy
 
 class Game:
     def __init__(self):
@@ -20,8 +21,8 @@ class Game:
             self.screen.fill((40, 40, 40))
             mouse = pygame.mouse.get_pos()
 
-            play_button = pygame.Rect(300, 300, 140, 50)
-            quit_button = pygame.Rect(300, 380, 140, 50)
+            play_button = pygame.Rect(width - 200, height -200, 140, 50)
+            quit_button = pygame.Rect(width - 200, height -125, 140, 50)
 
             pygame.draw.rect(self.screen, "skyblue" if play_button.collidepoint(mouse) else "darkgray", play_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
@@ -29,8 +30,8 @@ class Game:
             play_text = self.font.render("Play", True, "white")
             quit_text = self.font.render("Quit", True, "white")
 
-            self.screen.blit(play_text, (335, 305))
-            self.screen.blit(quit_text, (335, 385))
+            self.screen.blit(play_text, (width - 200 + 40, height - 200))
+            self.screen.blit(quit_text, (width - 200 + 40, height - 125))
 
             for event in pygame.event.get():
 
@@ -51,17 +52,47 @@ class Game:
 
     def game(self):
         player = Player()
+        seekers = [
+                SeekerEnemy(100,100),
+                SeekerEnemy(700,500)
+            ]
+
+        shooters = [
+            ShooterEnemy(600,100)
+        ]
         
         while True:
-            
+            self.screen.fill((40, 40, 40))
+
+            #pause_button
+            mouse = pygame.mouse.get_pos()
+            pause_button = pygame.Rect(width - 50, 25, 25, 50)
+            pygame.draw.rect(self.screen, "skyblue" if pause_button.collidepoint(mouse) else "darkgray", pause_button)
+
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
-            self.screen.fill((40, 40, 40))
+                if event.type == pygame.MOUSEBUTTONDOWN:
+
+                    if pause_button.collidepoint(mouse):
+                        self.start_menu()
+
+            #player
             player.move()
             player.draw(self.screen)
+
+            #enemies
+            for enemy in seekers:
+                enemy.update(player.ship_pos)
+                enemy.draw(self.screen)
+
+            for enemy in shooters:
+                enemy.update(player.ship_pos)
+                enemy.draw(self.screen)
+
             pygame.display.update()
             fps = self.clock.tick(60)
 
