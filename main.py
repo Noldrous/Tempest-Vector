@@ -40,11 +40,11 @@ class Game:
                     sys.exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-
-                    if play_button.collidepoint(mouse):
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if play_button.collidepoint(mouse) and mouse_buttons[0]:
                         self.game()
 
-                    if quit_button.collidepoint(mouse):
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
 
@@ -76,8 +76,8 @@ class Game:
                     sys.exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-
-                    if pause_button.collidepoint(mouse):
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if pause_button.collidepoint(mouse) and mouse_buttons[0]:
                         self.start_menu()
 
             #player
