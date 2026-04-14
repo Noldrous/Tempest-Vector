@@ -1,6 +1,6 @@
 from settings import *
 from player import Player
-from enemy import SeekerEnemy, ShooterEnemy
+from enemy import *
 
 class Game:
     def __init__(self):
@@ -92,6 +92,11 @@ class Game:
             for enemy in shooters:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
+
+            for seeker in seekers:
+                distance = player.ship_pos.distance_to(seeker.pos)
+                if distance < player.ship_radius + Enemy.radius:
+                    print("Player hit by seeker!")
 
             pygame.display.update()
             fps = self.clock.tick(60)

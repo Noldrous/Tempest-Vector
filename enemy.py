@@ -23,7 +23,6 @@ class Bullet:
                            self.radius)
 
 class SeekerEnemy(Enemy):
-
     def update(self, player_pos):
         direction = player_pos - self.pos
 
@@ -41,7 +40,6 @@ class SeekerEnemy(Enemy):
         )
 
 class ShooterEnemy(Enemy):
-
     def __init__(self, x, y):
         super().__init__(x, y)
 

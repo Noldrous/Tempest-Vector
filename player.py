@@ -9,6 +9,7 @@ class Player:
         self.friction = 0.95
         self.max_speed = 8
         self.ship_size = 20
+        self.ship_radius = self.ship_size 
 
     def draw(self, screen):
         tip = (self.ship_pos.x + math.cos(self.angle)*self.ship_size,
