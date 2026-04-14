@@ -37,7 +37,7 @@ class SeekerEnemy(Enemy):
             screen,
             (255, 80, 80),
             (int(self.pos.x), int(self.pos.y)),
-            self.size
+            self.size, 2
         )
 
 class ShooterEnemy(Enemy):
@@ -112,7 +112,7 @@ class ShooterEnemy(Enemy):
             self.size * 2
         )
 
-        pygame.draw.rect(screen, (80,120,255), rect)
+        pygame.draw.rect(screen, (80,120,255), rect, 3)
 
         for bullet in self.bullets:
             bullet.draw(screen)

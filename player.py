@@ -21,7 +21,7 @@ class Player:
         right = (self.ship_pos.x + math.cos(self.angle-2.5)*self.ship_size,
                  self.ship_pos.y + math.sin(self.angle-2.5)*self.ship_size)
 
-        pygame.draw.polygon(screen, (200,200,255), [tip, left, right])
+        pygame.draw.polygon(screen, (200,200,255), [tip, left, right], 3)
     
     def move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()

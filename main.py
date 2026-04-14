@@ -93,6 +93,13 @@ class Game:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
 
+                for bullet in enemy.bullets[:]:
+                    distance = player.ship_pos.distance_to(bullet.pos)
+
+                    if distance < player.ship_radius + bullet.radius:
+                        print("Player hit by bullet!")
+                        enemy.bullets.remove(bullet)
+
             for seeker in seekers:
                 distance = player.ship_pos.distance_to(seeker.pos)
                 if distance < player.ship_radius + seeker.hit_radius:
