@@ -95,11 +95,11 @@ class Game:
 
             for seeker in seekers:
                 distance = player.ship_pos.distance_to(seeker.pos)
-                if distance < player.ship_radius + Enemy.radius:
+                if distance < player.ship_radius + seeker.hit_radius:
                     print("Player hit by seeker!")
 
             pygame.display.update()
             fps = self.clock.tick(60)
 
 if __name__ == "__main__":
-    Game().start_menu()
+    Game().start_menu() 
