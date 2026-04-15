@@ -9,7 +9,7 @@ class Player:
         self.friction = 0.95
         self.max_speed = 8
         self.ship_size = 20
-        self.ship_radius = self.ship_size 
+        self.weapon = None
 
     def draw(self, screen):
         tip = (self.ship_pos.x + math.cos(self.angle)*self.ship_size,
@@ -21,7 +21,7 @@ class Player:
         right = (self.ship_pos.x + math.cos(self.angle-2.5)*self.ship_size,
                  self.ship_pos.y + math.sin(self.angle-2.5)*self.ship_size)
 
-        pygame.draw.polygon(screen, (200,200,255), [tip, left, right], 3)
+        pygame.draw.polygon(screen, (200,200,255), [tip, left, right])
     
     def move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
