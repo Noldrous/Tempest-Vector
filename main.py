@@ -1,5 +1,5 @@
 from settings import *
-from player import Player
+from player import *
 from enemy import *
 from weapons import *
 
@@ -85,7 +85,7 @@ class Game:
 
     def game(self):
         player = Player()
-        bullets = []
+        player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
 
@@ -123,19 +123,18 @@ class Game:
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
-                bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
+                player_bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
                 
                 # Check if weapon is depleted and cycle to next
                 if player.weapon.ammo <= 0:
                     weapons.cycle_weapon()
                     player.weapon = weapons.main  # Update player's weapon after cycling
 
-            for bullet in bullets:
+            for bullet in player_bullets:
                 bullet.update()
                 bullet.draw(self.screen)
 
-            bullets = [bullet for bullet in bullets if bullet.is_alive()]
-
+            player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
             status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
@@ -156,17 +155,27 @@ class Game:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
 
-                for bullet in enemy.bullets[:]:
-                    distance = player.ship_pos.distance_to(bullet.pos)
+            for bullet in enemy.bullets[:]:
+                distance = player.ship_pos.distance_to(bullet.pos)
 
-                    if distance < player.ship_radius + bullet.radius:
-                        print("Player hit by bullet!")
-                        enemy.bullets.remove(bullet)
+                if distance < player.ship_radius + bullet.radius:
+                    print("Player hit by bullet!")
+                    enemy.bullets.remove(bullet)
 
+            #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
             for seeker in seekers:
                 distance = player.ship_pos.distance_to(seeker.pos)
                 if distance < player.ship_radius + seeker.hit_radius:
                     print("Player hit by seeker!")
+
+            for bullet in player_bullets[:]:
+                for enemy in seekers + shooters:
+                    distance = enemy.pos.distance_to(bullet.pos)
+
+                    if distance < enemy.size + bullet.radius:
+                        print(f"{enemy.__class__.__name__} hit by bullet!")
+                        player_bullets.remove(bullet)
+                        break
 
             pygame.display.update()
             fps = self.clock.tick(60)
