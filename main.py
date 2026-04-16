@@ -122,7 +122,7 @@ class Game:
             player.draw(self.screen)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            if player.weapon is not None and pygame.mouse.get_pressed()[0]:
+            if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
                 bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
                 
                 # Check if weapon is depleted and cycle to next
@@ -141,6 +141,11 @@ class Game:
             status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
             self.screen.blit(status_text, (20, 20))
 
+            # Display "changing weapon" message if cycling
+            if weapons.should_show_message():
+                message_text = self.font.render("Swapping Weapon...", True, (255, 165, 0))
+                message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
+                self.screen.blit(message_text, message_rect)
 
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in seekers:
