@@ -110,7 +110,7 @@ class RailGun(Weapon):
             rate=700,
             damage=50,
             bullet_size='md',
-            spread=25,
+            spread=0,
             bullet_count=1,
             bullet_lifetime=100
         )
