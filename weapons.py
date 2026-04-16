@@ -105,7 +105,7 @@ class RailGun(Weapon):
     def __init__(self):
         super().__init__(
             name='Rail Gun',
-            bullet_speed=50,
+            bullet_speed=100,
             ammo=5,
             rate=700,
             damage=50,
