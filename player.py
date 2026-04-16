@@ -3,6 +3,7 @@ from settings import *
 class Player:
     def __init__(self):
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
+        self.hp = 100
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
         self.thrust_power = 0.2
