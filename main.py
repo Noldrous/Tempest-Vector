@@ -1,10 +1,11 @@
 from settings import *
 from player import Player
-from enemy import *
+from enemy import SeekerEnemy, ShooterEnemy
 from weapons import *
 
 class Game:
     def __init__(self):
+    
         #setup
         self.width, self.height = width, height
         self.screen = pygame.display.set_mode((self.width - 10, self.height - 50), pygame.FULLSCREEN)
@@ -85,31 +86,16 @@ class Game:
                     if pause_button.collidepoint(mouse) and mouse_buttons[0]:
                         self.start_menu()
 
-                # if event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_1 and len(player.weapons) > 0:
-                #         player.weapon_index = 0
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_2 and len(player.weapons) > 1:
-                #         player.weapon_index = 1
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_q and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index - 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_e and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index + 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
+                
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        weapons.swap_weapon()
-                        player.weapon = weapons.main  # Update player's weapon after swapping
+                
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             player.move()
             player.draw(self.screen)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            if player.weapon is not None and pygame.mouse.get_pressed()[0]:
+            if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
                 bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
                 
                 # Check if weapon is depleted and cycle to next
@@ -128,6 +114,12 @@ class Game:
             status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
             self.screen.blit(status_text, (20, 20))
 
+            # Display "changing weapon" message if cycling
+            if weapons.should_show_message():
+                message_text = self.font.render("Swapping Weapon...", True, (255, 165, 0))
+                message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
+                self.screen.blit(message_text, message_rect)
+
 
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in seekers:
@@ -137,18 +129,6 @@ class Game:
             for enemy in shooters:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
-
-                for bullet in enemy.bullets[:]:
-                    distance = player.ship_pos.distance_to(bullet.pos)
-
-                    if distance < player.ship_radius + bullet.radius:
-                        print("Player hit by bullet!")
-                        enemy.bullets.remove(bullet)
-
-            for seeker in seekers:
-                distance = player.ship_pos.distance_to(seeker.pos)
-                if distance < player.ship_radius + seeker.hit_radius:
-                    print("Player hit by seeker!")
 
             pygame.display.update()
             fps = self.clock.tick(60)
