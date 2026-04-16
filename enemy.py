@@ -8,7 +8,7 @@ class Enemy:
 
         self.hit_radius = self.size
 
-class Bullet:
+class Enemy_Bullet:
     def __init__(self, pos, direction):
         self.pos = pygame.Vector2(pos)
         self.vel = direction.normalize() * 10
@@ -71,7 +71,7 @@ class ShooterEnemy(Enemy):
 
             # fire barrage
             if self.state_timer % 5 == 0:
-                bullet = Bullet(self.pos, direction)
+                bullet = Enemy_Bullet(self.pos, direction)
                 self.bullets.append(bullet)
 
             # after barrage, move somewhere else

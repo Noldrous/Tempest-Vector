@@ -14,7 +14,6 @@ class Game:
         self.running = True
     
     def start_menu(self):
-
         while True:
 
             self.screen.fill((40, 40, 40))
@@ -49,6 +48,41 @@ class Game:
 
             pygame.display.update()
 
+    def pause_menu(self):
+        while True:
+
+            self.screen.fill((40, 40, 40))
+            mouse = pygame.mouse.get_pos()
+
+            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            play_text = self.font.render("Play", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(play_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if resume_button.collidepoint(mouse) and mouse_buttons[0]:
+                        return
+
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.quit()
+                        sys.exit()
+
+            pygame.display.update()
+
     def game(self):
         player = Player()
         bullets = []
@@ -60,11 +94,9 @@ class Game:
                 SeekerEnemy(700,500)
             ]
 
-
         shooters = [
             ShooterEnemy(600,100)
         ]
-        
 
         while True:
             self.screen.fill((40, 40, 40))
@@ -83,7 +115,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if pause_button.collidepoint(mouse) and mouse_buttons[0]:
-                        self.start_menu()
+                        self.pause_menu()
 
                 # if event.type == pygame.KEYDOWN:
                 #     if event.key == pygame.K_1 and len(player.weapons) > 0:
