@@ -1,11 +1,10 @@
 from settings import *
 from player import Player
-from enemy import SeekerEnemy, ShooterEnemy
+from enemy import *
 from weapons import *
 
 class Game:
     def __init__(self):
-    
         #setup
         self.width, self.height = width, height
         self.screen = pygame.display.set_mode((self.width - 10, self.height - 50), pygame.FULLSCREEN)
@@ -15,7 +14,6 @@ class Game:
         self.running = True
     
     def start_menu(self):
-
         while True:
 
             self.screen.fill((40, 40, 40))
@@ -50,6 +48,41 @@ class Game:
 
             pygame.display.update()
 
+    def pause_menu(self):
+        while True:
+
+            self.screen.fill((40, 40, 40))
+            mouse = pygame.mouse.get_pos()
+
+            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            play_text = self.font.render("Play", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(play_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if resume_button.collidepoint(mouse) and mouse_buttons[0]:
+                        return
+
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.quit()
+                        sys.exit()
+
+            pygame.display.update()
+
     def game(self):
         player = Player()
         bullets = []
@@ -61,11 +94,9 @@ class Game:
                 SeekerEnemy(700,500)
             ]
 
-
         shooters = [
             ShooterEnemy(600,100)
         ]
-        
 
         while True:
             self.screen.fill((40, 40, 40))
@@ -84,11 +115,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if pause_button.collidepoint(mouse) and mouse_buttons[0]:
-                        self.start_menu()
-
-                
-
-                
+                        self.pause_menu()
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             player.move()
@@ -120,7 +147,6 @@ class Game:
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
-
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in seekers:
                 enemy.update(player.ship_pos)
@@ -129,6 +155,18 @@ class Game:
             for enemy in shooters:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
+
+                for bullet in enemy.bullets[:]:
+                    distance = player.ship_pos.distance_to(bullet.pos)
+
+                    if distance < player.ship_radius + bullet.radius:
+                        print("Player hit by bullet!")
+                        enemy.bullets.remove(bullet)
+
+            for seeker in seekers:
+                distance = player.ship_pos.distance_to(seeker.pos)
+                if distance < player.ship_radius + seeker.hit_radius:
+                    print("Player hit by seeker!")
 
             pygame.display.update()
             fps = self.clock.tick(60)

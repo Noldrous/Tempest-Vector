@@ -3,15 +3,15 @@ from settings import *
 class Enemy:
     def __init__(self, x, y):
         self.pos = pygame.Vector2(x, y)
-        self.speed = 2
+        self.speed = 4
         self.size = 20
 
         self.hit_radius = self.size
 
-class Bullet:
+class Enemy_Bullet:
     def __init__(self, pos, direction):
         self.pos = pygame.Vector2(pos)
-        self.vel = direction.normalize() * 6
+        self.vel = direction.normalize() * 10
         self.radius = 4
 
     def update(self):
@@ -45,7 +45,7 @@ class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
 
-        self.speed = 3
+        self.speed = 100
         self.safe_distance = 200
 
         self.state = "shoot"   # shoot or move
@@ -70,8 +70,8 @@ class ShooterEnemy(Enemy):
                 direction = direction.normalize()
 
             # fire barrage
-            if self.state_timer % 10 == 0:
-                bullet = Bullet(self.pos, direction)
+            if self.state_timer % 5 == 0:
+                bullet = Enemy_Bullet(self.pos, direction)
                 self.bullets.append(bullet)
 
             # after barrage, move somewhere else
@@ -90,12 +90,15 @@ class ShooterEnemy(Enemy):
         elif self.state == "move":
 
             direction = self.target_pos - self.pos
+            distance = direction.length()
 
-            if direction.length() > 5:
+            if distance > 0:
                 direction = direction.normalize()
+
+            if distance > self.speed:
                 self.pos += direction * self.speed
             else:
-                # reached destination
+                self.pos = self.target_pos
                 self.state = "shoot"
                 self.state_timer = 0
 
