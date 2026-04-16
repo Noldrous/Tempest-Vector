@@ -117,25 +117,6 @@ class Game:
                     if pause_button.collidepoint(mouse) and mouse_buttons[0]:
                         self.pause_menu()
 
-                # if event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_1 and len(player.weapons) > 0:
-                #         player.weapon_index = 0
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_2 and len(player.weapons) > 1:
-                #         player.weapon_index = 1
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_q and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index - 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_e and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index + 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        weapons.swap_weapon()
-                        player.weapon = weapons.main  # Update player's weapon after swapping
-
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             player.move()
             player.draw(self.screen)
