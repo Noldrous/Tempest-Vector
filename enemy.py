@@ -8,11 +8,15 @@ class Enemy:
 
         self.hit_radius = self.size
 
+    def take_damage(self, damage):
+        self.health -= damage
+
 class Enemy_Bullet:
     def __init__(self, pos, direction):
         self.pos = pygame.Vector2(pos)
         self.vel = direction.normalize() * 10
         self.radius = 4
+        self.damage = 3
 
     def update(self):
         self.pos += self.vel
@@ -23,6 +27,10 @@ class Enemy_Bullet:
                            self.radius)
 
 class SeekerEnemy(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.health = 10
+        self.contact_damage = 2
 
     def update(self, player_pos):
         direction = player_pos - self.pos
@@ -41,10 +49,10 @@ class SeekerEnemy(Enemy):
         )
 
 class ShooterEnemy(Enemy):
-
     def __init__(self, x, y):
         super().__init__(x, y)
-
+        self.health = 100
+        self.contact_damage = 1
         self.speed = 100
         self.safe_distance = 200
 

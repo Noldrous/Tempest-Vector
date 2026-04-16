@@ -3,6 +3,8 @@ from settings import *
 class Player:
     def __init__(self):
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
+        self.health = 100
+        self.shield = 50
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
         self.thrust_power = 0.15
@@ -54,3 +56,13 @@ class Player:
         self.angle = angle
         self.ship_pos += self.velocity
         
+    def take_damage(self, amount):
+        if self.shield > 0 and self.shield >= amount:
+            self.shield -= amount
+        elif self.shield < amount:
+            amount -= self.shield
+            self.shield = 0
+            self.health -= (amount - self.shield)
+        else:
+            self.health -= amount
+

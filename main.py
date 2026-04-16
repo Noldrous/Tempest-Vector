@@ -1,5 +1,5 @@
 from settings import *
-from player import Player
+from player import *
 from enemy import *
 from weapons import *
 
@@ -60,7 +60,7 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            play_text = self.font.render("Play", True, "white")
+            play_text = self.font.render("Resume", True, "white")
             quit_text = self.font.render("Quit", True, "white")
 
             self.screen.blit(play_text, (width//2 - 50, height - 500))
@@ -83,9 +83,44 @@ class Game:
 
             pygame.display.update()
 
+    def game_over(self):
+        while True:
+
+            self.screen.fill((40, 40, 40))
+            mouse = pygame.mouse.get_pos()
+
+            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            try_again_text = self.font.render("Try Again", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if try_again_button.collidepoint(mouse) and mouse_buttons[0]:
+                        self.game()
+
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.quit()
+                        sys.exit()
+
+            pygame.display.update()
+
     def game(self):
         player = Player()
-        bullets = []
+        player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
 
@@ -121,21 +156,23 @@ class Game:
             player.move()
             player.draw(self.screen)
 
+            if player.health <= 0:
+                self.game_over()
+
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
-                bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
+                player_bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
                 
                 # Check if weapon is depleted and cycle to next
                 if player.weapon.ammo <= 0:
                     weapons.cycle_weapon()
                     player.weapon = weapons.main  # Update player's weapon after cycling
 
-            for bullet in bullets:
+            for bullet in player_bullets:
                 bullet.update()
                 bullet.draw(self.screen)
 
-            bullets = [bullet for bullet in bullets if bullet.is_alive()]
-
+            player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
             status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
@@ -156,17 +193,47 @@ class Game:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
 
+            for enemy in seekers + shooters:
+                if enemy.health <= 0:
+                    if enemy in seekers:
+                        seekers.remove(enemy)
+                    else:
+                        shooters.remove(enemy)
+
+            #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
+            for bullet in player_bullets[:]:
+                for enemy in seekers + shooters:
+                    distance = enemy.pos.distance_to(bullet.pos)
+
+                    if distance < enemy.size + bullet.radius:
+                        print(f"{enemy.__class__.__name__} hit by bullet!")
+                        enemy.take_damage(bullet.damage)
+                        player_bullets.remove(bullet)
+                        break
+            
+            for seeker in seekers:
+                distance = player.ship_pos.distance_to(seeker.pos)
+                if distance < player.ship_radius + seeker.hit_radius:
+                    print("Player hit by seeker!")
+                    player.take_damage(seeker.contact_damage)
+                    break
+            
+            for shooter in shooters:
+                distance = player.ship_pos.distance_to(shooter.pos)
+                if distance < player.ship_radius + shooter.hit_radius:
+                    print("Player hit by shooter!")
+                    player.take_damage(shooter.contact_damage)
+                    break
+            
+            for enemy in shooters:
                 for bullet in enemy.bullets[:]:
                     distance = player.ship_pos.distance_to(bullet.pos)
 
                     if distance < player.ship_radius + bullet.radius:
                         print("Player hit by bullet!")
+                        player.take_damage(bullet.damage)
                         enemy.bullets.remove(bullet)
-
-            for seeker in seekers:
-                distance = player.ship_pos.distance_to(seeker.pos)
-                if distance < player.ship_radius + seeker.hit_radius:
-                    print("Player hit by seeker!")
+                        break
 
             pygame.display.update()
             fps = self.clock.tick(60)
