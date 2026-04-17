@@ -1,11 +1,10 @@
 from settings import *
-from player import Player
-from enemy import SeekerEnemy, ShooterEnemy
+from player import *
+from enemy import *
 from weapons import *
 
 class Game:
     def __init__(self):
-    
         #setup
         self.width, self.height = width, height
         self.screen = pygame.display.set_mode((self.width - 10, self.height - 50), pygame.FULLSCREEN)
@@ -15,7 +14,6 @@ class Game:
         self.running = True
     
     def start_menu(self):
-
         while True:
 
             self.screen.fill((40, 40, 40))
@@ -50,22 +48,94 @@ class Game:
 
             pygame.display.update()
 
+    def pause_menu(self):
+        while True:
+
+            self.screen.fill((40, 40, 40))
+            mouse = pygame.mouse.get_pos()
+
+            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            play_text = self.font.render("Resume", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(play_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if resume_button.collidepoint(mouse) and mouse_buttons[0]:
+                        return
+
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.quit()
+                        sys.exit()
+
+            pygame.display.update()
+
+    def game_over(self):
+        while True:
+
+            self.screen.fill((40, 40, 40))
+            mouse = pygame.mouse.get_pos()
+
+            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            try_again_text = self.font.render("Try Again", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_buttons = pygame.mouse.get_pressed()
+                    if try_again_button.collidepoint(mouse) and mouse_buttons[0]:
+                        self.game()
+
+                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.quit()
+                        sys.exit()
+
+            pygame.display.update()
+
     def game(self):
         player = Player()
-        bullets = []
+        player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
+
+        #HEALTH BAR
+        health_bar = HealthBar(20, 60, 200, 20, player.health)
+        fuel_bar = FuelBar(20, 90, 200, 20, player.max_fuel)
 
         seekers = [
                 SeekerEnemy(100,100),
                 SeekerEnemy(700,500)
             ]
 
-
         shooters = [
             ShooterEnemy(600,100)
         ]
-        
 
         while True:
             self.screen.fill((40, 40, 40))
@@ -84,51 +154,42 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if pause_button.collidepoint(mouse) and mouse_buttons[0]:
-                        self.start_menu()
-
-                # if event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_1 and len(player.weapons) > 0:
-                #         player.weapon_index = 0
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_2 and len(player.weapons) > 1:
-                #         player.weapon_index = 1
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_q and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index - 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
-                #     elif event.key == pygame.K_e and len(player.weapons) > 0:
-                #         player.weapon_index = (player.weapon_index + 1) % len(player.weapons)
-                #         player.weapon = player.weapons[player.weapon_index]
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        weapons.swap_weapon()
-                        player.weapon = weapons.main  # Update player's weapon after swapping
+                        self.pause_menu()
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             player.move()
             player.draw(self.screen)
 
+            if player.health <= 0:
+                self.game_over()
+
+            health_bar.draw(self.screen, player.health)
+            fuel_bar.draw(self.screen, player.fuel)
+
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            if player.weapon is not None and pygame.mouse.get_pressed()[0]:
-                bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
+            if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
+                player_bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
                 
                 # Check if weapon is depleted and cycle to next
                 if player.weapon.ammo <= 0:
                     weapons.cycle_weapon()
                     player.weapon = weapons.main  # Update player's weapon after cycling
 
-            for bullet in bullets:
+            for bullet in player_bullets:
                 bullet.update()
                 bullet.draw(self.screen)
 
-            bullets = [bullet for bullet in bullets if bullet.is_alive()]
-
+            player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
             status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
             self.screen.blit(status_text, (20, 20))
 
+            # Display "changing weapon" message if cycling
+            if weapons.should_show_message():
+                message_text = self.font.render("Swapping Weapon...", True, (255, 165, 0))
+                message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
+                self.screen.blit(message_text, message_rect)
 
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in seekers:
@@ -138,6 +199,50 @@ class Game:
             for enemy in shooters:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
+
+            for enemy in seekers + shooters:
+                if enemy.health <= 0:
+                    if enemy in seekers:
+                        seekers.remove(enemy)
+                    else:
+                        shooters.remove(enemy)
+
+            #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
+            for bullet in player_bullets[:]:
+                for enemy in seekers + shooters:
+                    distance = enemy.pos.distance_to(bullet.pos)
+
+                    if distance < enemy.size + bullet.radius:
+                        print(f"{enemy.__class__.__name__} hit by bullet!")
+                        enemy.take_damage(bullet.damage)
+                        player_bullets.remove(bullet)
+                        break
+            
+            for seeker in seekers:
+                distance = player.ship_pos.distance_to(seeker.pos)
+                if distance < player.ship_radius + seeker.hit_radius:
+                    print("Player hit by seeker!")
+                    player.take_damage(seeker.contact_damage)
+                    break
+            
+            for shooter in shooters:
+                distance = player.ship_pos.distance_to(shooter.pos)
+                if distance < player.ship_radius + shooter.hit_radius:
+                    print("Player hit by shooter!")
+                    player.take_damage(shooter.contact_damage)
+                    break
+            
+            for enemy in shooters:
+                for bullet in enemy.bullets[:]:
+                    distance = player.ship_pos.distance_to(bullet.pos)
+
+                    if distance < player.ship_radius + bullet.radius:
+                        print("Player hit by bullet!")
+                        player.take_damage(bullet.damage)
+                        enemy.bullets.remove(bullet)
+                        break
+
+            
 
             pygame.display.update()
             fps = self.clock.tick(60)

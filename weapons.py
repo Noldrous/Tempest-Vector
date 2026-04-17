@@ -1,6 +1,6 @@
 from settings import *
 import random
-
+import time
 
 class Bullet:
     def __init__(self, x, y, angle, speed=20, size='sm', lifetime=150, damage=10, max_distance=None):
@@ -105,12 +105,12 @@ class RailGun(Weapon):
     def __init__(self):
         super().__init__(
             name='Rail Gun',
-            bullet_speed=50,
+            bullet_speed=100,
             ammo=5,
             rate=700,
             damage=50,
             bullet_size='md',
-            spread=25,
+            spread=0,
             bullet_count=1,
             bullet_lifetime=100
         )
@@ -130,10 +130,13 @@ class Rockets(Weapon):
         )
 
 class Weapons:
-    def __init__(self):
+    def __init__(self, cycle_delay=2000):
         self.queue = [MachineGun(), Shotgun(), RailGun(), Rockets()]
-        self.main = self.queue[0]
-        self.off = self.queue[1]
+        self.main = random.choice(self.queue)
+        self.cycle_delay = cycle_delay  # Delay in milliseconds
+        self.last_cycle_time = pygame.time.get_ticks()
+        self.message_time = 0  # Time when message should be displayed
+        self.message_duration = 800  # How long to show message in milliseconds
         
         # Store original ammo for each weapon type
         self.original_ammo = {
@@ -143,11 +146,25 @@ class Weapons:
             'Rockets': 3
         }
 
-    def swap_weapon(self):
-        if self.queue:
-            self.main, self.off = self.off, self.main
+    def can_cycle_weapon(self):
+        """Check if enough time has passed to cycle to the next weapon"""
+        current_time = pygame.time.get_ticks()
+        return (current_time - self.last_cycle_time) >= self.cycle_delay
+
+    def should_show_message(self):
+        """Check if the changing weapon message should be displayed"""
+        current_time = pygame.time.get_ticks()
+        return current_time < self.message_time
 
     def cycle_weapon(self):
+        # Check if the cycle delay has passed
+        if not self.can_cycle_weapon():
+            return
+        
+        # Update the cycle time
+        self.last_cycle_time = pygame.time.get_ticks()
+        self.message_time = self.last_cycle_time + self.message_duration  # Show message for duration
+        
         # Get the old weapon
         old_weapon = self.main
         
