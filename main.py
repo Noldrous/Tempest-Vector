@@ -12,25 +12,31 @@ class Game:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 40)
         self.running = True
+        self.assets = {
+            "background": load_image_alpha('background/space_bg.png'),
+            "title": load_image_alpha('ui/Title.png'),
+            "play_button1": load_image_alpha('ui/button_play.png'),
+            "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
+            "credits_button1": load_image_alpha('ui/button_credits.png'),
+            "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
+            "quit_button1": load_image_alpha('ui/exit_button.png'),
+            "quit_button2": load_image_alpha('ui/sad.png'),
+            "player_ship": load_image_alpha('player/player.png'),
+        }
     
     def start_menu(self):
+        bg = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        title = pygame.transform.scale(self.assets["title"], (731.25, 343.75))  
+        ship = pygame.transform.scale(self.assets["player_ship"], (88, 88))
+        ship = pygame.transform.rotate(ship, -90)
+        bg_x = 0
+        speed = 1
+
+        play_rect = self.assets["play_button1"].get_rect(topleft=(self.width - 350, self.height - 250))
+        credit_rect = self.assets["credits_button1"].get_rect(topleft=(self.width - 350, self.height - 150))
+        quit_rect = self.assets["quit_button1"].get_rect(topright=(self.width - 50, 50))
+
         while True:
-
-            self.screen.fill((40, 40, 40))
-            mouse = pygame.mouse.get_pos()
-
-            play_button = pygame.Rect(width - 200, height -200, 140, 50)
-            quit_button = pygame.Rect(width - 200, height -125, 140, 50)
-
-            pygame.draw.rect(self.screen, "skyblue" if play_button.collidepoint(mouse) else "darkgray", play_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
-
-            play_text = self.font.render("Play", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
-
-            self.screen.blit(play_text, (width - 200 + 40, height - 200))
-            self.screen.blit(quit_text, (width - 200 + 40, height - 125))
-
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -39,12 +45,32 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
-                    if play_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if play_rect.collidepoint(mouse) and mouse_buttons[0]:
                         self.game()
 
-                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
+                        
+            self.screen.fill((0,0,0))
+            mouse = pygame.mouse.get_pos()
+
+            play_button = self.assets["play_button2"] if pygame.Rect(play_rect.x, play_rect.y, play_rect.width, play_rect.height).collidepoint(mouse) else self.assets["play_button1"]
+            credits_button = self.assets["credits_button2"] if pygame.Rect(credit_rect.x, credit_rect.y, credit_rect.width, credit_rect.height).collidepoint(mouse) else self.assets["credits_button1"]
+            quit_button = self.assets["quit_button2"] if pygame.Rect(quit_rect.x, quit_rect.y, quit_rect.width, quit_rect.height).collidepoint(mouse) else self.assets["quit_button1"]
+
+            self.screen.blit(bg, (bg_x, 0))
+            self.screen.blit(bg, (bg_x + width, 0))
+            bg_x -= speed
+            if bg_x <= -width:
+                bg_x = 0
+            
+            self.screen.blit(title, (75,75))
+            self.screen.blit(ship, (self.width//2 - 100, self.height//2 + 150))
+            
+            self.screen.blit(play_button, play_rect)
+            self.screen.blit(credits_button, credit_rect)
+            self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
 
@@ -119,10 +145,17 @@ class Game:
             pygame.display.update()
 
     def game(self):
-        player = Player()
+        bg = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        bg_x = 0
+        speed = 1
+        player = Player(self.assets["player_ship"])
         player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
+
+        #HEALTH BAR
+        health_bar = HealthBar(20, 60, 200, 20, player.health)
+        fuel_bar = FuelBar(20, 90, 200, 20, player.max_fuel)
 
         seekers = [
                 SeekerEnemy(100,100),
@@ -135,6 +168,11 @@ class Game:
 
         while True:
             self.screen.fill((40, 40, 40))
+            self.screen.blit(bg, (bg_x, 0))
+            self.screen.blit(bg, (bg_x + width, 0))
+            bg_x -= speed
+            if bg_x <= -width:
+                bg_x = 0
 
             #pause_button -------------------------------------------------------------------------------------------------------------------------------------------------------
             mouse = pygame.mouse.get_pos()
@@ -158,6 +196,9 @@ class Game:
 
             if player.health <= 0:
                 self.game_over()
+
+            health_bar.draw(self.screen, player.health)
+            fuel_bar.draw(self.screen, player.fuel)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
@@ -234,6 +275,8 @@ class Game:
                         player.take_damage(bullet.damage)
                         enemy.bullets.remove(bullet)
                         break
+
+            
 
             pygame.display.update()
             fps = self.clock.tick(60)
