@@ -21,7 +21,7 @@ class Game:
             "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
             "quit_button1": load_image_alpha('ui/exit_button.png'),
             "quit_button2": load_image_alpha('ui/sad.png'),
-            "player_ship": load_image_alpha('player/player.png'),
+            "player_ship": pygame.transform.scale(load_image_alpha('player/player.png'), (64, 64)),  # Scaled down to 64x64 pixels
         }
     
     def start_menu(self):
@@ -153,9 +153,14 @@ class Game:
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
 
-        #HEALTH BAR
-        health_bar = HealthBar(20, 60, 200, 20, player.health)
-        fuel_bar = FuelBar(20, 90, 200, 20, player.max_fuel)
+        # HEALTH BAR
+        hpBar_x = self.width // 2 - 400
+        hpBar_y = self.height - 40
+        health_bar = HealthBar(hpBar_x, hpBar_y, 800, 20, player.health)
+        
+        shield_bar_x = self.width // 2 - 400
+        shield_bar_y = self.height - 70
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 800, 20, player.shield)
 
         seekers = [
                 SeekerEnemy(100,100),
@@ -198,7 +203,8 @@ class Game:
                 self.game_over()
 
             health_bar.draw(self.screen, player.health)
-            fuel_bar.draw(self.screen, player.fuel)
+            shield_bar.draw(self.screen, player.shield)
+            
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():

@@ -29,8 +29,8 @@ class Enemy_Bullet:
 class SeekerEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 10
-        self.contact_damage = 2
+        self.health = 20
+        self.contact_damage = 0.5
 
     def update(self, player_pos):
         direction = player_pos - self.pos
