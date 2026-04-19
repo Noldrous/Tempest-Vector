@@ -3,19 +3,15 @@ from settings import *
 class Player:
     def __init__(self, image):
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
-        self.health = 100
-        self.shield = 50
+        self.health = 200
+        self.shield = 100
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
         self.thrust_power = 0.20
         self.friction = 0.99
         self.max_speed = 10
-        self.ship_radius = 32
+        self.ship_radius = 16  # Adjusted for smaller ship size
         self.image = image
-        self.max_fuel = 100
-        self.fuel = self.max_fuel
-        self.fuel_consumption_rate = 0.8
-        self.fuel_regen_rate = 0.3
 
     def draw(self, screen):
         rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) - 90)
@@ -33,20 +29,10 @@ class Player:
         mouse_buttons = pygame.mouse.get_pressed()
     
         if keys[pygame.K_SPACE] or mouse_buttons[2]:
-            if self.fuel > 0:
-                thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
-                self.velocity += thrust * self.thrust_power
-                self.fuel -= self.fuel_consumption_rate
-                if self.fuel < 0:
-                    self.fuel = 0
-            else:
-                self.velocity *= self.friction
+            thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
+            self.velocity += thrust * self.thrust_power
         else:
             self.velocity *= self.friction
-            if self.fuel < self.max_fuel:
-                self.fuel += self.fuel_regen_rate
-                if self.fuel > self.max_fuel:
-                    self.fuel = self.max_fuel
 
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
@@ -87,15 +73,15 @@ class HealthBar:
         pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.w, self.h))
         pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y, self.w * health_ratio, self.h))
 
-class FuelBar:
-    def __init__(self, x, y, w, h, max_fuel):
+class ShieldBar:
+    def __init__(self, x, y, w, h, max_shield):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
-        self.max_fuel = max_fuel
+        self.max_shield = max_shield
 
-    def draw(self, screen, current_fuel):
-        fuel_ratio = max(0, min(current_fuel / self.max_fuel, 1))
-        pygame.draw.rect(screen, (50, 50, 50), (self.x, self.y, self.w, self.h))
-        pygame.draw.rect(screen, (0, 150, 255), (self.x, self.y, self.w * fuel_ratio, self.h))
+    def draw(self, screen, current_shield):
+        shield_ratio = current_shield / self.max_shield
+        pygame.draw.rect(screen, (0, 0, 255), (self.x, self.y, self.w, self.h))
+        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y, self.w * shield_ratio, self.h))
