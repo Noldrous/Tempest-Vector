@@ -7,13 +7,20 @@ class Game:
     def __init__(self):
         #setup
         self.width, self.height = width, height
-        self.screen = pygame.display.set_mode((self.width - 10, self.height - 50), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Tempest Vector")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 40)
         self.running = True
         self.assets = {
-            "background": load_image_alpha('background/space_bg.png'),
+            "background": load_image_alpha('background/background.png'),
+            "shadow1": load_image_alpha('background/shadow1.png'),
+            "shadow2": load_image_alpha('background/shadow2.png'),
+            "star1": load_image_alpha('background/star1.png'),
+            "star2": load_image_alpha('background/star2.png'),
+            "celestial1": load_image_alpha('background/celestial1.png'),
+            "celestial2": load_image_alpha('background/celestial2.png'),
+            "celestial3": load_image_alpha('background/celestial3.png'),
             "title": load_image_alpha('ui/Title.png'),
             "play_button1": load_image_alpha('ui/button_play.png'),
             "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
@@ -23,17 +30,44 @@ class Game:
             "quit_button2": load_image_alpha('ui/sad.png'),
             "player_ship": load_image_alpha('player/player.png'),
         }
-    
-    def start_menu(self):
-        bg = pygame.transform.scale(self.assets["background"], (self.width, self.height))
-        title = pygame.transform.scale(self.assets["title"], (731.25, 343.75))  
-        ship = pygame.transform.scale(self.assets["player_ship"], (88, 88))
-        ship = pygame.transform.rotate(ship, -90)
-        bg_x = 0
-        speed = 1
+        self.bg_positions = {
+            "shadow1": 0,
+            "shadow2": 0,
+            "star1": 0,
+            "star2": 0,
+            "celestial1": 0,
+            "celestial2": 0,
+            "celestial3": 0,
+        }
 
-        play_rect = self.assets["play_button1"].get_rect(topleft=(self.width - 350, self.height - 250))
-        credit_rect = self.assets["credits_button1"].get_rect(topleft=(self.width - 350, self.height - 150))
+    def setbackground(self, key, speed, pos1, pos2, pos3):
+        bg = self.assets[key]
+        bg_width = bg.get_width()
+        x = self.bg_positions[key]
+
+        for y in (pos1, pos2, pos3):
+            self.screen.blit(bg, (x, y))
+            self.screen.blit(bg, (x + bg_width, y))
+
+        x -= speed
+        if x <= -5760:
+            x = 0
+
+        self.bg_positions[key] = x
+
+    def start_menu(self):
+        self.screen.fill("DARKBLUE")
+        background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        title = pygame.transform.scale(self.assets["title"], (self.width / 2.4, self.height / 2.9))
+        play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))
+        play2 = pygame.transform.scale(self.assets["play_button2"], (self.width // 8, self.height // 14))
+        credits1 = pygame.transform.scale(self.assets["credits_button1"], (self.width // 8, self.height // 14))
+        credits2 = pygame.transform.scale(self.assets["credits_button2"], (self.width // 8, self.height // 14))
+        quit1 = self.assets["quit_button1"]
+        quit2 = self.assets["quit_button2"]
+        
+        play_rect = play1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 5))
+        credit_rect = credits1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
         quit_rect = self.assets["quit_button1"].get_rect(topright=(self.width - 50, 50))
 
         while True:
@@ -51,29 +85,31 @@ class Game:
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
-                        
-            self.screen.fill((0,0,0))
+        
+            self.screen.blit(background, (0, 0))
             mouse = pygame.mouse.get_pos()
 
-            play_button = self.assets["play_button2"] if pygame.Rect(play_rect.x, play_rect.y, play_rect.width, play_rect.height).collidepoint(mouse) else self.assets["play_button1"]
-            credits_button = self.assets["credits_button2"] if pygame.Rect(credit_rect.x, credit_rect.y, credit_rect.width, credit_rect.height).collidepoint(mouse) else self.assets["credits_button1"]
-            quit_button = self.assets["quit_button2"] if pygame.Rect(quit_rect.x, quit_rect.y, quit_rect.width, quit_rect.height).collidepoint(mouse) else self.assets["quit_button1"]
+            play_button = play2 if pygame.Rect(play_rect.x, play_rect.y, play_rect.width, play_rect.height).collidepoint(mouse) else play1
+            credits_button = credits2 if pygame.Rect(credit_rect.x, credit_rect.y, credit_rect.width, credit_rect.height).collidepoint(mouse) else credits1
+            quit_button = quit2 if pygame.Rect(quit_rect.x, quit_rect.y, quit_rect.width, quit_rect.height).collidepoint(mouse) else quit1
 
-            self.screen.blit(bg, (bg_x, 0))
-            self.screen.blit(bg, (bg_x + width, 0))
-            bg_x -= speed
-            if bg_x <= -width:
-                bg_x = 0
+            pos = random.randint(0, self.height - 360)
+            self.setbackground("celestial1", 1, 300, self.height, self.height)
+            self.setbackground("celestial2", 1, 0, self.height, self.height)
+            self.setbackground("celestial3", 1, 500, self.height, self.height)
+            self.setbackground("star1", 0.5, 0, 360, 720)
+            self.setbackground("star2", 0.5, 0, 360, 720)
+            self.setbackground("shadow1", 0.8, 0, 360, 720)
             
             self.screen.blit(title, (75,75))
-            self.screen.blit(ship, (self.width//2 - 100, self.height//2 + 150))
-            
+
             self.screen.blit(play_button, play_rect)
             self.screen.blit(credits_button, credit_rect)
             self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
-
+            self.clock.tick(60)
+            
     def pause_menu(self):
         while True:
 
