@@ -237,7 +237,14 @@ class Game:
                 self.game_over()
 
             health_bar.draw(self.screen, player.health)
-            fuel_bar.draw(self.screen, player.fuel)
+            shield_bar.draw(self.screen, player.shield)
+            
+            # Wave info display
+            wave_text = self.font.render(f"Wave: {wave_manager.get_current_wave_number()}", True, "white")
+            self.screen.blit(wave_text, (20, 60))
+            
+            enemy_count_text = self.font.render(f"Enemies: {len(wave_manager.get_all_enemies())}", True, "white")
+            self.screen.blit(enemy_count_text, (20, 100))
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
