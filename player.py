@@ -14,12 +14,19 @@ class Player:
         self.ship_radius = 16  # Adjusted for smaller ship size
         self.image = image
 
+        self.control_enabled = False
+        self.entrance_speed = 6
+        self.ship_pos = pygame.Vector2(width // 2 - 200, height + 100)  # start below screen
+
     def draw(self, screen):
         rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) - 90)
         rect = rotated_image.get_rect(center=self.ship_pos)
         screen.blit(rotated_image, rect.topleft)
     
     def move(self):
+        if not self.control_enabled:
+            self.entrance()
+            return
         mouse_x, mouse_y = pygame.mouse.get_pos()
     
         dx = mouse_x - self.ship_pos.x
@@ -60,6 +67,18 @@ class Player:
         else:
             self.health -= amount
 
+    def entrance(self):
+        target = pygame.Vector2(width // 2, height // 2)
+
+        direction = target - self.ship_pos
+
+        if direction.length() > 5:
+            direction = direction.normalize()
+            self.ship_pos += direction * self.entrance_speed
+            self.angle = math.atan2(direction.y, direction.x)
+        else:
+            self.ship_pos = target
+            self.control_enabled = True
 
 
 class HealthBar:
