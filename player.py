@@ -2,31 +2,31 @@ from settings import *
 
 class Player:
     def __init__(self, image):
-        self.ship_pos = pygame.Vector2(width // 2, height // 2)
+        self.ship_pos = pygame.Vector2(width // 2, height // 2 + 500)
         self.health = 200
         self.shield = 100
-        self.shield_regeneration = 0.5
+        self.shield_regeneration = 0.1
+        self.max_shield = 100
+        self.shield_regen_delay = 240  
+        self.last_damage_timer = 0
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
-        self.thrust_power = 0.20
-        self.friction = 0.99
+        self.thrust_power = 0.25
+        self.friction = 0.98
         self.max_speed = 12
+        self.turn_speed = 0.09  # radians per frame (adjust)
+        self.angular_velocity = 0
         self.ship_radius = 16  # Adjusted for smaller ship size
         self.image = image
+        self.entering = True
 
-        self.control_enabled = False
-        self.entrance_speed = 6
-        self.ship_pos = pygame.Vector2(width // 2 - 200, height + 100)  # start below screen
 
     def draw(self, screen):
-        rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) - 90)
+        rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) -90)
         rect = rotated_image.get_rect(center=self.ship_pos)
         screen.blit(rotated_image, rect.topleft)
     
     def move(self):
-        if not self.control_enabled:
-            self.entrance()
-            return
         mouse_x, mouse_y = pygame.mouse.get_pos()
     
         dx = mouse_x - self.ship_pos.x
@@ -54,31 +54,57 @@ class Player:
         elif self.ship_pos.y > height:
             self.ship_pos.y = 0
 
-        self.angle = angle
+        target_angle = angle
+
+        # shortest angular difference (-pi to pi)
+        diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+
+        # apply turning speed limit
+        self.angle += diff * self.turn_speed
         self.ship_pos += self.velocity
         
     def take_damage(self, amount):
-        if self.shield > 0 and self.shield >= amount:
-            self.shield -= amount
-        elif self.shield < amount:
-            amount -= self.shield
-            self.shield = 0
-            self.health -= (amount - self.shield)
+        self.last_damage_timer = self.shield_regen_delay
+
+        if self.shield > 0:
+            if self.shield >= amount:
+                self.shield -= amount
+                return
+            else:
+                amount -= self.shield
+                self.shield = 0
+
+        self.health -= amount
+    
+    def regen_shield(self):
+        if self.last_damage_timer > 0:
+            self.last_damage_timer -= 1
         else:
-            self.health -= amount
+            if self.shield < self.max_shield:
+                self.shield += self.shield_regeneration
+                if self.shield > self.max_shield:
+                    self.shield = self.max_shield
+
+    def apply_recoil(self, angle, strength=3):
+        recoil = pygame.Vector2(
+            -math.cos(angle),
+            -math.sin(angle)
+        )
+        self.velocity += recoil * strength
 
     def entrance(self):
         target = pygame.Vector2(width // 2, height // 2)
 
-        direction = target - self.ship_pos
+        if self.entering:
+            direction = target - self.ship_pos
 
-        if direction.length() > 5:
-            direction = direction.normalize()
-            self.ship_pos += direction * self.entrance_speed
+            # rotate ship toward center
             self.angle = math.atan2(direction.y, direction.x)
-        else:
-            self.ship_pos = target
-            self.control_enabled = True
+
+            self.ship_pos += direction * 0.05
+
+            if direction.length() < 5:
+                self.entering = False
 
 
 class HealthBar:

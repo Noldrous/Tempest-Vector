@@ -73,13 +73,12 @@ class Game:
         credit_rect = credits1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
         quit_rect = quit1.get_rect(topright=(self.width - 50, 50))
         title_rect = title.get_rect(topleft=(75, 75))
-        ship_rect = ship.get_rect(topleft=(120, 600))
 
         play_pressed = False
 
-        ship_base_y = self.height // 1.5
-        ship_move_y = 0
+        ship_base_x = self.width // 3
         ship_move_x = 0
+        ship_y = self.height // 1.9
 
         while True:
             dt = self.clock.tick(60) / 1000.0   
@@ -108,9 +107,9 @@ class Game:
                 quit_rect.x += 15
                 title_rect.x -= 15
 
-                ship_move_y += 15
+                ship_move_x += 30
 
-                if ship_base_y + ship_move_y > self.height + 500:
+                if ship_base_x + ship_move_x > self.width + 500:
                     self.game()
 
             self.screen.blit(background, (0, 0))
@@ -119,27 +118,27 @@ class Game:
             credits_button = credits2 if credit_rect.collidepoint(mouse) else credits1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
             
+            self.setbackground("shadow1", 4, 0, 360, 720)
+            self.setbackground("shadow2", 1, 0, 360, 720)
             self.setbackground("celestial1", 1.2, 300, self.height, self.height)
             self.setbackground("celestial2", 1.2, 0, self.height, self.height)
             self.setbackground("celestial3", 1.2, 500, self.height, self.height)
-            self.setbackground("star1", 5, 0, 360, 720)
+            self.setbackground("star1", 3, 0, 360, 720)
             self.setbackground("star2", 2, 0, 360, 720)
-            self.setbackground("shadow1", 4, 0, 360, 720)
+            
+            
 
 
             self.sway_time += dt
 
-            ship_x = self.width // 3
+            
 
             offset_x = math.sin(self.sway_time * 2) * 10
             offset_y = math.cos(self.sway_time * 1.5) * 30
 
-            ship_rect = ship.get_rect(
-                center=(
-                    ship_x + offset_x,
-                    ship_base_y + ship_move_y + offset_y
-                )
-            )
+            
+
+            ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
 
             self.screen.blit(ship, ship_rect)
             
@@ -153,22 +152,8 @@ class Game:
             
     def pause_menu(self):
         while True:
-
             self.screen.fill((0,0,0))
             mouse = pygame.mouse.get_pos()
-
-            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
-            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
-
-            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
-
-            play_text = self.font.render("Resume", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
-
-            self.screen.blit(play_text, (width//2 - 50, height - 500))
-            self.screen.blit(quit_text, (width//2 - 50, height - 400))
-
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -184,25 +169,28 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
+            
+
+            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            play_text = self.font.render("Resume", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(play_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
+            
+
             pygame.display.update()
 
     def game_over(self):
         while True:
-
             self.screen.fill((0,0,0))
             mouse = pygame.mouse.get_pos()
-
-            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
-            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
-
-            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
-
-            try_again_text = self.font.render("Try Again", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
-
-            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
-            self.screen.blit(quit_text, (width//2 - 50, height - 400))
 
             for event in pygame.event.get():
 
@@ -219,12 +207,23 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
+            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
+            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+
+            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
+            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+
+            try_again_text = self.font.render("Try Again", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
+
+            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
+            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+
             pygame.display.update()
 
     def game(self):
         background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
-        bg_x = 0
-        speed = 1
+
         player = Player(self.assets["player_ship"])
         player_bullets = []
         weapons = Weapons()
@@ -252,13 +251,14 @@ class Game:
             mouse = pygame.mouse.get_pos()
 
             self.screen.blit(background, (0, 0))
-
+            self.setbackground("shadow1", 1, 0, 360, 720)
+            self.setbackground("shadow2", 2, 0, 360, 720)
             self.setbackground("celestial1", 0.5, 300, self.height, self.height)
             self.setbackground("celestial2", 0.4, 0, self.height, self.height)
             self.setbackground("celestial3", 0.3, 500, self.height, self.height)
             self.setbackground("star1", 0.5, 0, 360, 720)
             self.setbackground("star2", 0.8, 0, 360, 720)
-            self.setbackground("shadow1", 1, 0, 360, 720)
+            
 
             #pause_button -------------------------------------------------------------------------------------------------------------------------------------------------------
             pause_button = pygame.Rect(width - 50, 25, 25, 50)
@@ -276,8 +276,11 @@ class Game:
                         self.pause_menu()
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
-            player.entrance()
-            player.move()
+            if player.entering:
+                player.entrance()
+            else:
+                player.move()
+            player.regen_shield()
             player.draw(self.screen)
 
             if player.health <= 0:
@@ -295,12 +298,32 @@ class Game:
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
-                player_bullets.extend(player.weapon.shoot(player.ship_pos.x, player.ship_pos.y, player.angle))
-                
-                # Check if weapon is depleted and cycle to next
+                bullets = player.weapon.shoot(
+                    player.ship_pos.x,
+                    player.ship_pos.y,
+                    player.angle
+                )
+
+                if bullets:
+                    player_bullets.extend(bullets)
+
+                    # recoil ONLY when actual shot happens
+                    recoil_strength = {
+                        "Machine Gun": 1,
+                        "Shotgun": 5,
+                        "Rail Gun": 6,
+                        "Rockets": 8
+                    }
+
+                    player.apply_recoil(
+                        player.angle,
+                        recoil_strength[player.weapon.name]
+                    )
+
+                # weapon swap check
                 if player.weapon.ammo <= 0:
                     weapons.cycle_weapon()
-                    player.weapon = weapons.main  # Update player's weapon after cycling
+                    player.weapon = weapons.main
 
             for bullet in player_bullets:
                 bullet.update()
