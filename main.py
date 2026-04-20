@@ -57,7 +57,6 @@ class Game:
         self.bg_positions[key] = x
 
     def start_menu(self):
-        self.screen.fill("DARKBLUE")
         background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
         title = pygame.transform.scale(self.assets["title"], (self.width / 2.4, self.height / 2.9))
         play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))

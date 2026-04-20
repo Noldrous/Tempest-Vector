@@ -5,6 +5,7 @@ class Player:
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
         self.health = 200
         self.shield = 100
+        self.shield_regeneration = 0.5
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
         self.thrust_power = 0.20
@@ -58,6 +59,7 @@ class Player:
             self.health -= (amount - self.shield)
         else:
             self.health -= amount
+
 
 
 class HealthBar:
