@@ -2,6 +2,7 @@ from settings import *
 from player import *
 from enemy import *
 from weapons import *
+from waves import *
 
 class Game:
     def __init__(self):
@@ -348,8 +349,9 @@ class Game:
                 pygame.display.update()
                 pygame.time.wait(3000)
                 self.start_menu()
+
             pygame.display.update()
-            self.clock.tick(60)
+            #self.clock.tick(60)
 
 if __name__ == "__main__":
     Game().start_menu()
