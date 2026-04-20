@@ -293,42 +293,61 @@ class Game:
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
+            # Player bullets hit enemies
             for bullet in player_bullets[:]:
-                for enemy in seekers + shooters:
+                for enemy in all_enemies:
                     distance = enemy.pos.distance_to(bullet.pos)
 
                     if distance < enemy.size + bullet.radius:
                         print(f"{enemy.__class__.__name__} hit by bullet!")
                         enemy.take_damage(bullet.damage)
-                        player_bullets.remove(bullet)
+                        if bullet in player_bullets:
+                            player_bullets.remove(bullet)
                         break
             
-            for seeker in seekers:
-                distance = player.ship_pos.distance_to(seeker.pos)
-                if distance < player.ship_radius + seeker.hit_radius:
-                    print("Player hit by seeker!")
-                    player.take_damage(seeker.contact_damage)
-                    break
-            
-            for shooter in shooters:
-                distance = player.ship_pos.distance_to(shooter.pos)
-                if distance < player.ship_radius + shooter.hit_radius:
-                    print("Player hit by shooter!")
-                    player.take_damage(shooter.contact_damage)
-                    break
-            
-            for enemy in shooters:
-                for bullet in enemy.bullets[:]:
-                    distance = player.ship_pos.distance_to(bullet.pos)
-
-                    if distance < player.ship_radius + bullet.radius:
-                        print("Player hit by bullet!")
-                        player.take_damage(bullet.damage)
-                        enemy.bullets.remove(bullet)
+            # Enemy collision with player
+            for enemy in all_enemies:
+                if enemy.__class__.__name__ == "SeekerEnemy":
+                    distance = player.ship_pos.distance_to(enemy.pos)
+                    if distance < player.ship_radius + enemy.hit_radius:
+                        print("Player hit by seeker!")
+                        player.take_damage(enemy.contact_damage)
                         break
-
             
+            for enemy in all_enemies:
+                if enemy.__class__.__name__ == "ShooterEnemy":
+                    distance = player.ship_pos.distance_to(enemy.pos)
+                    if distance < player.ship_radius + enemy.hit_radius:
+                        print("Player hit by shooter!")
+                        player.take_damage(enemy.contact_damage)
+                        break
+            
+            # Enemy bullets hit player
+            for enemy in all_enemies:
+                if hasattr(enemy, 'bullets'):
+                    for bullet in enemy.bullets[:]:
+                        distance = player.ship_pos.distance_to(bullet.pos)
 
+                        if distance < player.ship_radius + bullet.radius:
+                            print("Player hit by enemy bullet!")
+                            player.take_damage(bullet.damage)
+                            enemy.bullets.remove(bullet)
+                            break
+            
+            # Wave start message
+            if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
+                wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
+                wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
+                self.screen.blit(wave_msg_surface, wave_msg_rect)
+
+            # Victory condition
+            if wave_manager.is_wave_complete():
+                victory_text = self.font.render("ALL WAVES COMPLETE! VICTORY!", True, (0, 255, 0))
+                victory_rect = victory_text.get_rect(center=(self.width // 2, self.height // 2))
+                self.screen.blit(victory_text, victory_rect)
+                pygame.display.update()
+                pygame.time.wait(3000)
+                self.start_menu()
             pygame.display.update()
             self.clock.tick(60)
 
