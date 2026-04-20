@@ -31,4 +31,3 @@ def load_images(path):
     for img_name in sorted(os.listdir(folder)):
         images.append(load_image(os.path.join(path, img_name)))
     return images
-

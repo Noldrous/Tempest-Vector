@@ -15,7 +15,7 @@ class Enemy_Bullet:
     def __init__(self, pos, direction):
         self.pos = pygame.Vector2(pos)
         self.vel = direction.normalize() * 10
-        self.radius = 4
+        self.radius = 2
         self.damage = 3
 
     def update(self):
@@ -29,8 +29,8 @@ class Enemy_Bullet:
 class SeekerEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 10
-        self.contact_damage = 2
+        self.health = 20
+        self.contact_damage = 0.5
 
     def update(self, player_pos):
         direction = player_pos - self.pos
@@ -53,7 +53,7 @@ class ShooterEnemy(Enemy):
         super().__init__(x, y)
         self.health = 100
         self.contact_damage = 1
-        self.speed = 100
+        self.speed = 2
         self.safe_distance = 200
 
         self.state = "shoot"   # shoot or move
