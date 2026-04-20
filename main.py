@@ -206,6 +206,7 @@ class Game:
         last_announced_wave = 0
 
         while True:
+            dt = self.clock.tick(60) / 1000.0  # Delta time in seconds - Change 60 to 30 or 45 to slow down
             self.screen.fill((40, 40, 40))
             self.screen.blit(bg, (bg_x, 0))
             self.screen.blit(bg, (bg_x + width, 0))
@@ -271,21 +272,25 @@ class Game:
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
+            #wave management -------------------------------------------------------------------------------------------------------------------------------------------------------
+            wave_manager.update(dt)
+            all_enemies = wave_manager.get_all_enemies()
+
+            current_wave = wave_manager.get_current_wave_number()
+            if not wave_manager.is_wave_complete() and current_wave != last_announced_wave:
+                wave_message = f"Wave {current_wave}"
+                wave_message_time = pygame.time.get_ticks()
+                last_announced_wave = current_wave
+
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
-            for enemy in seekers:
+            for enemy in all_enemies:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
 
-            for enemy in shooters:
-                enemy.update(player.ship_pos)
-                enemy.draw(self.screen)
-
-            for enemy in seekers + shooters:
+            # Remove dead enemies
+            for enemy in all_enemies[:]:
                 if enemy.health <= 0:
-                    if enemy in seekers:
-                        seekers.remove(enemy)
-                    else:
-                        shooters.remove(enemy)
+                    wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
             for bullet in player_bullets[:]:
