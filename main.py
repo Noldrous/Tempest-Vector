@@ -189,18 +189,21 @@ class Game:
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
 
-        #HEALTH BAR
-        health_bar = HealthBar(20, 60, 200, 20, player.health)
-        fuel_bar = FuelBar(20, 90, 200, 20, player.max_fuel)
+        # HEALTH BAR
+        hpBar_x = self.width // 2 - 400
+        hpBar_y = self.height - 40
+        health_bar = HealthBar(hpBar_x, hpBar_y, 800, 20, player.health)
+        
+        shield_bar_x = self.width // 2 - 400
+        shield_bar_y = self.height - 70
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 800, 20, player.shield)
 
-        seekers = [
-                SeekerEnemy(100,100),
-                SeekerEnemy(700,500)
-            ]
-
-        shooters = [
-            ShooterEnemy(600,100)
-        ]
+        # Initialize Wave Manager
+        wave_manager = WaveManager()
+        wave_message = ""
+        wave_message_time = 0
+        wave_message_duration = 2000
+        last_announced_wave = 0
 
         while True:
             self.screen.fill((40, 40, 40))
@@ -315,7 +318,7 @@ class Game:
             
 
             pygame.display.update()
-            fps = self.clock.tick(60)
+            self.clock.tick(60)
 
 if __name__ == "__main__":
     Game().start_menu()
