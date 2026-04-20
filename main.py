@@ -2,6 +2,7 @@ from settings import *
 from player import *
 from enemy import *
 from weapons import *
+from waves import *
 
 class Game:
     def __init__(self):
@@ -12,25 +13,31 @@ class Game:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 40)
         self.running = True
+        self.assets = {
+            "background": load_image_alpha('background/space_bg.png'),
+            "title": load_image_alpha('ui/Title.png'),
+            "play_button1": load_image_alpha('ui/button_play.png'),
+            "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
+            "credits_button1": load_image_alpha('ui/button_credits.png'),
+            "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
+            "quit_button1": load_image_alpha('ui/exit_button.png'),
+            "quit_button2": load_image_alpha('ui/sad.png'),
+            "player_ship": pygame.transform.scale(load_image_alpha('player/player.png'), (64, 64)),  # Scaled down to 64x64 pixels
+        }
     
     def start_menu(self):
+        bg = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        title = pygame.transform.scale(self.assets["title"], (731.25, 343.75))  
+        ship = pygame.transform.scale(self.assets["player_ship"], (88, 88))
+        ship = pygame.transform.rotate(ship, -90)
+        bg_x = 0
+        speed = 1
+
+        play_rect = self.assets["play_button1"].get_rect(topleft=(self.width - 350, self.height - 250))
+        credit_rect = self.assets["credits_button1"].get_rect(topleft=(self.width - 350, self.height - 150))
+        quit_rect = self.assets["quit_button1"].get_rect(topright=(self.width - 50, 50))
+
         while True:
-
-            self.screen.fill((40, 40, 40))
-            mouse = pygame.mouse.get_pos()
-
-            play_button = pygame.Rect(width - 200, height -200, 140, 50)
-            quit_button = pygame.Rect(width - 200, height -125, 140, 50)
-
-            pygame.draw.rect(self.screen, "skyblue" if play_button.collidepoint(mouse) else "darkgray", play_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
-
-            play_text = self.font.render("Play", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
-
-            self.screen.blit(play_text, (width - 200 + 40, height - 200))
-            self.screen.blit(quit_text, (width - 200 + 40, height - 125))
-
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -39,12 +46,32 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
-                    if play_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if play_rect.collidepoint(mouse) and mouse_buttons[0]:
                         self.game()
 
-                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
+                        
+            self.screen.fill((0,0,0))
+            mouse = pygame.mouse.get_pos()
+
+            play_button = self.assets["play_button2"] if pygame.Rect(play_rect.x, play_rect.y, play_rect.width, play_rect.height).collidepoint(mouse) else self.assets["play_button1"]
+            credits_button = self.assets["credits_button2"] if pygame.Rect(credit_rect.x, credit_rect.y, credit_rect.width, credit_rect.height).collidepoint(mouse) else self.assets["credits_button1"]
+            quit_button = self.assets["quit_button2"] if pygame.Rect(quit_rect.x, quit_rect.y, quit_rect.width, quit_rect.height).collidepoint(mouse) else self.assets["quit_button1"]
+
+            self.screen.blit(bg, (bg_x, 0))
+            self.screen.blit(bg, (bg_x + width, 0))
+            bg_x -= speed
+            if bg_x <= -width:
+                bg_x = 0
+            
+            self.screen.blit(title, (75,75))
+            self.screen.blit(ship, (self.width//2 - 100, self.height//2 + 150))
+            
+            self.screen.blit(play_button, play_rect)
+            self.screen.blit(credits_button, credit_rect)
+            self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
 
@@ -119,22 +146,39 @@ class Game:
             pygame.display.update()
 
     def game(self):
-        player = Player()
+        bg = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        bg_x = 0
+        speed = 1
+        player = Player(self.assets["player_ship"])
         player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
 
-        seekers = [
-                SeekerEnemy(100,100),
-                SeekerEnemy(700,500)
-            ]
+        # HEALTH BAR
+        hpBar_x = self.width // 2 - 400
+        hpBar_y = self.height - 40
+        health_bar = HealthBar(hpBar_x, hpBar_y, 800, 20, player.health)
+        
+        shield_bar_x = self.width // 2 - 400
+        shield_bar_y = self.height - 70
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 800, 20, player.shield)
 
-        shooters = [
-            ShooterEnemy(600,100)
-        ]
+        # Initialize Wave Manager
+        wave_manager = WaveManager()
+        wave_message = ""
+        wave_message_time = 0
+        wave_message_duration = 2000
+        last_announced_wave = 0
 
         while True:
+            dt = self.clock.tick(60) / 1000.0  # Delta time in seconds - Change 60 to 30 or 45 to slow down
+            
             self.screen.fill((40, 40, 40))
+            self.screen.blit(bg, (bg_x, 0))
+            self.screen.blit(bg, (bg_x + width, 0))
+            bg_x -= speed
+            if bg_x <= -width:
+                bg_x = 0
 
             #pause_button -------------------------------------------------------------------------------------------------------------------------------------------------------
             mouse = pygame.mouse.get_pos()
@@ -158,6 +202,16 @@ class Game:
 
             if player.health <= 0:
                 self.game_over()
+
+            health_bar.draw(self.screen, player.health)
+            shield_bar.draw(self.screen, player.shield)
+            
+            # Wave info display
+            wave_text = self.font.render(f"Wave: {wave_manager.get_current_wave_number()}", True, "white")
+            self.screen.blit(wave_text, (20, 60))
+            
+            enemy_count_text = self.font.render(f"Enemies: {len(wave_manager.get_all_enemies())}", True, "white")
+            self.screen.blit(enemy_count_text, (20, 100))
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
@@ -184,59 +238,85 @@ class Game:
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
+            #wave management -------------------------------------------------------------------------------------------------------------------------------------------------------
+            wave_manager.update(dt)
+            all_enemies = wave_manager.get_all_enemies()
+
+            current_wave = wave_manager.get_current_wave_number()
+            if not wave_manager.is_wave_complete() and current_wave != last_announced_wave:
+                wave_message = f"Wave {current_wave}"
+                wave_message_time = pygame.time.get_ticks()
+                last_announced_wave = current_wave
+
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
-            for enemy in seekers:
+            for enemy in all_enemies:
                 enemy.update(player.ship_pos)
                 enemy.draw(self.screen)
 
-            for enemy in shooters:
-                enemy.update(player.ship_pos)
-                enemy.draw(self.screen)
-
-            for enemy in seekers + shooters:
+            # Remove dead enemies
+            for enemy in all_enemies[:]:
                 if enemy.health <= 0:
-                    if enemy in seekers:
-                        seekers.remove(enemy)
-                    else:
-                        shooters.remove(enemy)
+                    wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
+            # Player bullets hit enemies
             for bullet in player_bullets[:]:
-                for enemy in seekers + shooters:
+                for enemy in all_enemies:
                     distance = enemy.pos.distance_to(bullet.pos)
 
                     if distance < enemy.size + bullet.radius:
                         print(f"{enemy.__class__.__name__} hit by bullet!")
                         enemy.take_damage(bullet.damage)
-                        player_bullets.remove(bullet)
+                        if bullet in player_bullets:
+                            player_bullets.remove(bullet)
                         break
             
-            for seeker in seekers:
-                distance = player.ship_pos.distance_to(seeker.pos)
-                if distance < player.ship_radius + seeker.hit_radius:
-                    print("Player hit by seeker!")
-                    player.take_damage(seeker.contact_damage)
-                    break
+            # Enemy collision with player
+            for enemy in all_enemies:
+                if enemy.__class__.__name__ == "SeekerEnemy":
+                    distance = player.ship_pos.distance_to(enemy.pos)
+                    if distance < player.ship_radius + enemy.hit_radius:
+                        print("Player hit by seeker!")
+                        player.take_damage(enemy.contact_damage)
+                        break
             
-            for shooter in shooters:
-                distance = player.ship_pos.distance_to(shooter.pos)
-                if distance < player.ship_radius + shooter.hit_radius:
-                    print("Player hit by shooter!")
-                    player.take_damage(shooter.contact_damage)
-                    break
+            for enemy in all_enemies:
+                if enemy.__class__.__name__ == "ShooterEnemy":
+                    distance = player.ship_pos.distance_to(enemy.pos)
+                    if distance < player.ship_radius + enemy.hit_radius:
+                        print("Player hit by shooter!")
+                        player.take_damage(enemy.contact_damage)
+                        break
             
-            for enemy in shooters:
-                for bullet in enemy.bullets[:]:
-                    distance = player.ship_pos.distance_to(bullet.pos)
+            # Enemy bullets hit player
+            for enemy in all_enemies:
+                if hasattr(enemy, 'bullets'):
+                    for bullet in enemy.bullets[:]:
+                        distance = player.ship_pos.distance_to(bullet.pos)
 
-                    if distance < player.ship_radius + bullet.radius:
-                        print("Player hit by bullet!")
-                        player.take_damage(bullet.damage)
-                        enemy.bullets.remove(bullet)
-                        break
+                        if distance < player.ship_radius + bullet.radius:
+                            print("Player hit by enemy bullet!")
+                            player.take_damage(bullet.damage)
+                            enemy.bullets.remove(bullet)
+                            break
+            
+            # Wave start message
+            if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
+                wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
+                wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
+                self.screen.blit(wave_msg_surface, wave_msg_rect)
+
+            # Victory condition
+            if wave_manager.is_wave_complete():
+                victory_text = self.font.render("ALL WAVES COMPLETE! VICTORY!", True, (0, 255, 0))
+                victory_rect = victory_text.get_rect(center=(self.width // 2, self.height // 2))
+                self.screen.blit(victory_text, victory_rect)
+                pygame.display.update()
+                pygame.time.wait(3000)
+                self.start_menu()
 
             pygame.display.update()
-            fps = self.clock.tick(60)
+            #self.clock.tick(60)  # Limit game to 60 FPS - change to 30 or 45 to slow down
 
 if __name__ == "__main__":
     Game().start_menu()

@@ -1,29 +1,22 @@
 from settings import *
 
 class Player:
-    def __init__(self):
+    def __init__(self, image):
         self.ship_pos = pygame.Vector2(width // 2, height // 2)
-        self.health = 100
-        self.shield = 50
+        self.health = 200
+        self.shield = 100
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
-        self.thrust_power = 0.15
-        self.friction = 0.98
-        self.max_speed = 8
-        self.ship_size = 20
-        self.ship_radius = self.ship_size 
+        self.thrust_power = 0.20
+        self.friction = 0.99
+        self.max_speed = 12
+        self.ship_radius = 16  # Adjusted for smaller ship size
+        self.image = image
 
     def draw(self, screen):
-        tip = (self.ship_pos.x + math.cos(self.angle)*self.ship_size,
-          self.ship_pos.y + math.sin(self.angle)*self.ship_size)
-
-        left = (self.ship_pos.x + math.cos(self.angle+2.5)*self.ship_size,
-                self.ship_pos.y + math.sin(self.angle+2.5)*self.ship_size)
-    
-        right = (self.ship_pos.x + math.cos(self.angle-2.5)*self.ship_size,
-                 self.ship_pos.y + math.sin(self.angle-2.5)*self.ship_size)
-
-        pygame.draw.polygon(screen, (200,200,255), [tip, left, right], 3)
+        rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) - 90)
+        rect = rotated_image.get_rect(center=self.ship_pos)
+        screen.blit(rotated_image, rect.topleft)
     
     def move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -66,3 +59,29 @@ class Player:
         else:
             self.health -= amount
 
+
+class HealthBar:
+    def __init__(self, x, y, w, h, max_health):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.max_health = max_health
+
+    def draw(self, screen, current_health):
+        health_ratio = current_health / self.max_health
+        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.w, self.h))
+        pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y, self.w * health_ratio, self.h))
+
+class ShieldBar:
+    def __init__(self, x, y, w, h, max_shield):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.max_shield = max_shield
+
+    def draw(self, screen, current_shield):
+        shield_ratio = current_shield / self.max_shield
+        pygame.draw.rect(screen, (0, 0, 255), (self.x, self.y, self.w, self.h))
+        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y, self.w * shield_ratio, self.h))
