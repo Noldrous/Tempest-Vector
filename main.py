@@ -38,6 +38,7 @@ class Game:
         quit_rect = self.assets["quit_button1"].get_rect(topright=(self.width - 50, 50))
 
         while True:
+            mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -54,7 +55,7 @@ class Game:
                         sys.exit()
                         
             self.screen.fill((0,0,0))
-            mouse = pygame.mouse.get_pos()
+            
 
             play_button = self.assets["play_button2"] if pygame.Rect(play_rect.x, play_rect.y, play_rect.width, play_rect.height).collidepoint(mouse) else self.assets["play_button1"]
             credits_button = self.assets["credits_button2"] if pygame.Rect(credit_rect.x, credit_rect.y, credit_rect.width, credit_rect.height).collidepoint(mouse) else self.assets["credits_button1"]
