@@ -1,4 +1,5 @@
 from settings import *
+from particle import Particle
 
 class Player:
     def __init__(self, image):
@@ -18,12 +19,15 @@ class Player:
         self.angular_velocity = 0
         self.ship_radius = 16  # Adjusted for smaller ship size
         self.image = image
+        self.particles = []
         self.entering = True
 
-
     def draw(self, screen):
-        rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.angle) -90)
+        resized_image = pygame.transform.scale(self.image, (128, 128))
+        rotated_image = pygame.transform.rotate(resized_image, -math.degrees(self.angle) -90)
         rect = rotated_image.get_rect(center=self.ship_pos)
+        for p in self.particles:
+            p.draw(screen)
         screen.blit(rotated_image, rect.topleft)
     
     def move(self):
@@ -39,6 +43,15 @@ class Player:
         if keys[pygame.K_SPACE] or mouse_buttons[2]:
             thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
             self.velocity += thrust * self.thrust_power
+
+            # spawn particles behind ship
+            for _ in range(2):
+                offset = pygame.Vector2(-math.cos(self.angle), -math.sin(self.angle)) * 20
+                pos = self.ship_pos + offset
+
+                vel = pygame.Vector2(random.uniform(-1,1), random.uniform(-1,1)) - thrust * 2
+                self.particles.append(Particle(pos, vel))
+
         else:
             self.velocity *= self.friction
 
@@ -62,6 +75,11 @@ class Player:
         # apply turning speed limit
         self.angle += diff * self.turn_speed
         self.ship_pos += self.velocity
+
+        for p in self.particles[:]:
+            p.update()
+            if p.life <= 0:
+                self.particles.remove(p)
         
     def take_damage(self, amount):
         self.last_damage_timer = self.shield_regen_delay
@@ -105,7 +123,6 @@ class Player:
 
             if direction.length() < 5:
                 self.entering = False
-
 
 class HealthBar:
     def __init__(self, x, y, w, h, max_health):

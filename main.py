@@ -79,6 +79,7 @@ class Game:
         ship_base_x = self.width // 3
         ship_move_x = 0
         ship_y = self.height // 1.9
+        ship_particles = []
 
         while True:
             dt = self.clock.tick(60) / 1000.0   
@@ -105,7 +106,7 @@ class Game:
                 play_rect.x += 15
                 credit_rect.x += 15
                 quit_rect.x += 15
-                title_rect.x -= 15
+                title_rect.x -= 25
 
                 ship_move_x += 30
 
@@ -126,19 +127,31 @@ class Game:
             self.setbackground("star1", 3, 0, 360, 720)
             self.setbackground("star2", 2, 0, 360, 720)
             
-            
-
-
             self.sway_time += dt
-
-            
 
             offset_x = math.sin(self.sway_time * 2) * 10
             offset_y = math.cos(self.sway_time * 1.5) * 30
 
-            
-
             ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
+
+            if ship_move_x < width//2:  
+                pos = pygame.Vector2(
+                    ship_rect.left + 75,
+                    ship_rect.centery - 3
+                )
+
+                vel = pygame.Vector2(
+                    random.uniform(-3, -1),
+                    random.uniform(-1, 1)
+                )
+
+                ship_particles.append(Particle(pos, vel))
+            for particle in ship_particles:
+                particle.update()
+            ship_particles = [p for p in ship_particles if p.life > 0]
+            for particle in ship_particles:
+                particle.draw(self.screen)
+            
 
             self.screen.blit(ship, ship_rect)
             
@@ -169,8 +182,6 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-            
-
             resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
             quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
 
@@ -182,8 +193,6 @@ class Game:
 
             self.screen.blit(play_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
-
-            
 
             pygame.display.update()
 

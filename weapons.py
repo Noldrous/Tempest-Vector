@@ -71,7 +71,6 @@ class Weapon:
             ))
         return bullets
     
-
 class MachineGun(Weapon):
     def __init__(self):
         super().__init__(
@@ -86,7 +85,6 @@ class MachineGun(Weapon):
             bullet_lifetime=90
         )
     
-
 class Shotgun(Weapon):
     def __init__(self):
         super().__init__(
