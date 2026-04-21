@@ -3,7 +3,7 @@ from particle import Particle
 
 class Player:
     def __init__(self, image):
-        self.ship_pos = pygame.Vector2(width // 2, height // 2 + 500)
+        self.ship_pos = pygame.Vector2(width//2, height // 2 + 500)
         self.health = 200
         self.shield = 100
         self.shield_regeneration = 0.1

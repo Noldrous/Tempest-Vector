@@ -3,11 +3,10 @@ from settings import *
 class Enemy:
     def __init__(self, x, y):
         self.pos = pygame.Vector2(x, y)
-        self.speed = 4
         self.size = 20
-
         self.hit_radius = self.size
-
+        self.velocity = pygame.Vector2(0, 0)
+        
     def take_damage(self, damage):
         self.health -= damage
 
@@ -31,14 +30,19 @@ class SeekerEnemy(Enemy):
         super().__init__(x, y)
         self.health = 20
         self.contact_damage = 0.5
+        self.max_speed = 5
 
     def update(self, player_pos):
-        direction = player_pos - self.pos
+        dx = player_pos.x - self.pos.x
+        dy = player_pos.y - self.pos.y
+        angle = math.atan2(dy, dx)
 
-        if direction.length() != 0:
-            direction = direction.normalize()
+        thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
+        self.velocity += thrust 
+        self.pos += self.velocity
 
-        self.pos += direction * self.speed
+        if self.velocity.length() > self.max_speed:
+            self.velocity.scale_to_length(self.max_speed)
 
     def draw(self, screen):
         pygame.draw.circle(
@@ -53,10 +57,10 @@ class ShooterEnemy(Enemy):
         super().__init__(x, y)
         self.health = 100
         self.contact_damage = 1
-        self.speed = 2
+        self.max_speed = 10
         self.safe_distance = 200
 
-        self.state = "shoot"   # shoot or move
+        self.state = "shoot"
         self.state_timer = 0
 
         self.target_pos = pygame.Vector2(x, y)
@@ -64,7 +68,6 @@ class ShooterEnemy(Enemy):
         self.bullets = []
 
     def update(self, player_pos):
-
         self.state_timer += 1
 
         # -------------------
@@ -96,17 +99,22 @@ class ShooterEnemy(Enemy):
         # MOVE STATE
         # -------------------
         elif self.state == "move":
+            dx = self.target_pos.x - self.pos.x
+            dy = self.target_pos.y - self.pos.y
+            angle = math.atan2(dy, dx)
 
-            direction = self.target_pos - self.pos
-            distance = direction.length()
+            thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
+            self.velocity += thrust
 
-            if distance > 0:
-                direction = direction.normalize()
+            if self.velocity.length() > self.max_speed:
+                self.velocity.scale_to_length(self.max_speed)
 
-            if distance > self.speed:
-                self.pos += direction * self.speed
-            else:
-                self.pos = self.target_pos
+            self.pos += self.velocity
+
+            distance = self.pos.distance_to(self.target_pos)
+
+            if distance < 10:
+                self.velocity *= 0.25
                 self.state = "shoot"
                 self.state_timer = 0
 

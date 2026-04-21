@@ -13,6 +13,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 40)
         self.running = True
+        
         self.assets = {
             "background": load_image_alpha('background/background.png'),
             "shadow1": load_image_alpha('background/shadow1.png'),
@@ -30,7 +31,9 @@ class Game:
             "quit_button1": load_image_alpha('ui/exit_button.png'),
             "quit_button2": load_image_alpha('ui/sad.png'),
             "player_ship": load_image_alpha('player/player.png'),
+            "seeker": load_image_alpha('enemies/seeker.png'),
         }
+
         self.bg_positions = {
             "shadow1": 0,
             "shadow2": 0,
@@ -40,7 +43,8 @@ class Game:
             "celestial2": 0,
             "celestial3": 0,
         }
-        self.sway_time = 0  
+        self.background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
+        self.sway_time = 0
 
     def setbackground(self, key, speed, pos1, pos2, pos3):
         bg = self.assets[key]
@@ -58,7 +62,6 @@ class Game:
         self.bg_positions[key] = x
 
     def start_menu(self):
-        background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
         title = pygame.transform.scale(self.assets["title"], (self.width / 2.4, self.height / 2.9))
         play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))
         play2 = pygame.transform.scale(self.assets["play_button2"], (self.width // 8, self.height // 14))
@@ -76,6 +79,12 @@ class Game:
 
         play_pressed = False
 
+        shadow1_speed = 4
+        shadow2_speed = 1
+        celestials = 1.2
+        star1_speed = 3
+        star2_speed = 2
+
         ship_base_x = self.width // 3
         ship_move_x = 0
         ship_y = self.height // 1.9
@@ -84,7 +93,6 @@ class Game:
         while True:
             dt = self.clock.tick(60) / 1000.0   
             mouse = pygame.mouse.get_pos()
-            self.screen.fill((0,0,0))
             
             for event in pygame.event.get():
 
@@ -97,12 +105,16 @@ class Game:
                     if play_rect.collidepoint(mouse) and mouse_buttons[0]:
                         play_pressed = True
                             
-            
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
             
             if play_pressed:
+                shadow1_speed = 8
+                shadow2_speed = 8
+                celestials = 10
+                star1_speed = 8
+                star2_speed = 6
                 play_rect.x += 15
                 credit_rect.x += 15
                 quit_rect.x += 15
@@ -113,19 +125,19 @@ class Game:
                 if ship_base_x + ship_move_x > self.width + 500:
                     self.game()
 
-            self.screen.blit(background, (0, 0))
+            self.screen.blit(self.background, (0, 0))
 
             play_button = play2 if play_rect.collidepoint(mouse) else play1
             credits_button = credits2 if credit_rect.collidepoint(mouse) else credits1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
             
-            self.setbackground("shadow1", 4, 0, 360, 720)
-            self.setbackground("shadow2", 1, 0, 360, 720)
-            self.setbackground("celestial1", 1.2, 300, self.height, self.height)
-            self.setbackground("celestial2", 1.2, 0, self.height, self.height)
-            self.setbackground("celestial3", 1.2, 500, self.height, self.height)
-            self.setbackground("star1", 3, 0, 360, 720)
-            self.setbackground("star2", 2, 0, 360, 720)
+            self.setbackground("shadow1", shadow1_speed, 0, 360, 720)
+            self.setbackground("shadow2", shadow2_speed, 0, 360, 720)
+            self.setbackground("celestial1", celestials, 300, self.height, self.height)
+            self.setbackground("celestial2", celestials, 0, self.height, self.height)
+            self.setbackground("celestial3", celestials, 500, self.height, self.height)
+            self.setbackground("star1", star1_speed, 0, 360, 720)
+            self.setbackground("star2", star2_speed, 0, 360, 720)
             
             self.sway_time += dt
 
@@ -165,7 +177,6 @@ class Game:
             
     def pause_menu(self):
         while True:
-            self.screen.fill((0,0,0))
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
 
@@ -198,7 +209,6 @@ class Game:
 
     def game_over(self):
         while True:
-            self.screen.fill((0,0,0))
             mouse = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -231,8 +241,6 @@ class Game:
             pygame.display.update()
 
     def game(self):
-        background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
-
         player = Player(self.assets["player_ship"])
         player_bullets = []
         weapons = Weapons()
@@ -255,20 +263,18 @@ class Game:
         last_announced_wave = 0
 
         while True:
-            self.screen.fill((0,0,0))
             dt = self.clock.tick(60) / 1000.0  # Delta time in seconds - Change 60 to 30 or 45 to slow down
             mouse = pygame.mouse.get_pos()
 
-            self.screen.blit(background, (0, 0))
-            self.setbackground("shadow1", 1, 0, 360, 720)
-            self.setbackground("shadow2", 2, 0, 360, 720)
+            self.screen.blit(self.background, (0, 0))
+            self.setbackground("shadow1", 2, 0, 360, 720)
+            self.setbackground("shadow2", 1, 0, 360, 720)
             self.setbackground("celestial1", 0.5, 300, self.height, self.height)
             self.setbackground("celestial2", 0.4, 0, self.height, self.height)
             self.setbackground("celestial3", 0.3, 500, self.height, self.height)
-            self.setbackground("star1", 0.5, 0, 360, 720)
-            self.setbackground("star2", 0.8, 0, 360, 720)
+            self.setbackground("star1", 0.8, 0, 360, 720)
+            self.setbackground("star2", 0.5, 0, 360, 720)
             
-
             #pause_button -------------------------------------------------------------------------------------------------------------------------------------------------------
             pause_button = pygame.Rect(width - 50, 25, 25, 50)
             pygame.draw.rect(self.screen, "skyblue" if pause_button.collidepoint(mouse) else "darkgray", pause_button)
@@ -377,7 +383,6 @@ class Game:
                     distance = enemy.pos.distance_to(bullet.pos)
 
                     if distance < enemy.size + bullet.radius:
-                        print(f"{enemy.__class__.__name__} hit by bullet!")
                         enemy.take_damage(bullet.damage)
                         if bullet in player_bullets:
                             player_bullets.remove(bullet)
@@ -388,7 +393,6 @@ class Game:
                 if enemy.__class__.__name__ == "SeekerEnemy":
                     distance = player.ship_pos.distance_to(enemy.pos)
                     if distance < player.ship_radius + enemy.hit_radius:
-                        print("Player hit by seeker!")
                         player.take_damage(enemy.contact_damage)
                         break
             
@@ -396,7 +400,6 @@ class Game:
                 if enemy.__class__.__name__ == "ShooterEnemy":
                     distance = player.ship_pos.distance_to(enemy.pos)
                     if distance < player.ship_radius + enemy.hit_radius:
-                        print("Player hit by shooter!")
                         player.take_damage(enemy.contact_damage)
                         break
             
@@ -407,7 +410,6 @@ class Game:
                         distance = player.ship_pos.distance_to(bullet.pos)
 
                         if distance < player.ship_radius + bullet.radius:
-                            print("Player hit by enemy bullet!")
                             player.take_damage(bullet.damage)
                             enemy.bullets.remove(bullet)
                             break
@@ -428,7 +430,6 @@ class Game:
                 self.start_menu()
 
             pygame.display.update()
-            #self.clock.tick(60)
 
 if __name__ == "__main__":
     Game().start_menu()
