@@ -11,11 +11,11 @@ class Enemy:
         self.health -= damage
 
 class Enemy_Bullet:
-    def __init__(self, pos, direction):
+    def __init__(self, pos, direction, damage):
         self.pos = pygame.Vector2(pos)
         self.vel = direction.normalize() * 10
         self.radius = 2
-        self.damage = 3
+        self.damage = damage
 
     def update(self):
         self.pos += self.vel
@@ -56,6 +56,7 @@ class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.health = 100
+        self.damage = 3
         self.contact_damage = 1
         self.max_speed = 5
         self.safe_distance = 200
@@ -85,7 +86,7 @@ class ShooterEnemy(Enemy):
 
             # fire barrage
             if self.state_timer % 5 == 0:
-                bullet = Enemy_Bullet(self.pos, direction)
+                bullet = Enemy_Bullet(self.pos, direction, self.damage)
                 self.bullets.append(bullet)
 
             # after barrage, move somewhere else
