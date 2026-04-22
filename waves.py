@@ -49,10 +49,10 @@ class WaveManager:
         """Spawn an enemy of the specified type at a random location"""
         # Spawn enemies at edges of screen
         spawn_locations = [
-            (random.randint(0, width), random.randint(0, 100)),           # Top
-            (random.randint(0, width), random.randint(height - 100, height)),  # Bottom
-            (random.randint(0, 100), random.randint(0, height)),          # Left
-            (random.randint(width - 100, width), random.randint(0, height))    # Right
+            (random.randint(0, width), -100),           # Top
+            (random.randint(0, width), height + 100),  # Bottom
+            (-100, random.randint(0, height)),          # Left
+            (width + 100, random.randint(0, height))    # Right
         ]
         
         x, y = random.choice(spawn_locations)

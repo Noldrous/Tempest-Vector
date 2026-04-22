@@ -57,13 +57,16 @@ class ShooterEnemy(Enemy):
         super().__init__(x, y)
         self.health = 100
         self.contact_damage = 1
-        self.max_speed = 10
+        self.max_speed = 5
         self.safe_distance = 200
 
-        self.state = "shoot"
+        self.state = "move"
         self.state_timer = 0
 
-        self.target_pos = pygame.Vector2(x, y)
+        self.target_pos = pygame.Vector2(
+            random.randint(100, width-100),
+            random.randint(100, height-100)
+        )
 
         self.bullets = []
 
@@ -99,6 +102,7 @@ class ShooterEnemy(Enemy):
         # MOVE STATE
         # -------------------
         elif self.state == "move":
+            self.velocity *= 0.98
             dx = self.target_pos.x - self.pos.x
             dy = self.target_pos.y - self.pos.y
             angle = math.atan2(dy, dx)
@@ -114,7 +118,6 @@ class ShooterEnemy(Enemy):
             distance = self.pos.distance_to(self.target_pos)
 
             if distance < 10:
-                self.velocity *= 0.25
                 self.state = "shoot"
                 self.state_timer = 0
 
