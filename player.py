@@ -8,7 +8,8 @@ class Player:
         self.shield = 100
         self.shield_regeneration = 0.1
         self.max_shield = 100
-        self.shield_regen_delay = 240  
+        self.shield_regen_delay = 240
+        self.ram_damage = 2
         self.last_damage_timer = 0
         self.velocity = pygame.Vector2(0, 0)
         self.angle = 0
@@ -22,6 +23,10 @@ class Player:
         self.particles = []
         self.entering = True
 
+    @property
+    def ramming_damage(self):
+        return self.velocity.length() * self.ram_damage
+    
     def draw(self, screen):
         resized_image = pygame.transform.scale(self.image, (128, 128))
         rotated_image = pygame.transform.rotate(resized_image, -math.degrees(self.angle) -90)

@@ -6,6 +6,13 @@ class Enemy:
         self.size = 20
         self.hit_radius = self.size
         self.velocity = pygame.Vector2(0, 0)
+        self.health = 1
+        self.base_damage = 1
+        self.base_speed = 1
+        self.damage_multiplier = 1
+        self.speed_multiplier = 1
+        self.knockback = pygame.Vector2(0, 0)
+        self.knockback_decay = 0.85
         
     def take_damage(self, damage):
         self.health -= damage
@@ -16,9 +23,14 @@ class Enemy_Bullet:
         self.vel = direction.normalize() * 10
         self.radius = 2
         self.damage = damage
+        self.lifetime = 120
 
     def update(self):
         self.pos += self.vel
+        self.lifetime -= 1
+
+    def alive(self):
+        return self.lifetime > 0
 
     def draw(self, screen):
         pygame.draw.circle(screen, (255,200,50),
@@ -29,8 +41,15 @@ class SeekerEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.health = 20
-        self.contact_damage = 0.5
-        self.max_speed = 5
+        self.base_damage = 3
+        self.base_speed = 3
+
+    @property
+    def max_speed(self):
+        return self.base_speed * self.speed_multiplier
+    @property
+    def max_damage(self):
+        return self.base_damage * self.damage_multiplier
 
     def update(self, player_pos):
         dx = player_pos.x - self.pos.x
@@ -39,10 +58,12 @@ class SeekerEnemy(Enemy):
 
         thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
         self.velocity += thrust 
-        self.pos += self.velocity
-
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
+        
+        total_velocity = self.velocity + self.knockback
+        self.pos += total_velocity
+        self.knockback *= self.knockback_decay
 
     def draw(self, screen):
         pygame.draw.circle(
@@ -56,10 +77,8 @@ class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.health = 100
-        self.damage = 3
-        self.contact_damage = 1
-        self.max_speed = 5
-        self.safe_distance = 200
+        self.base_damage = 1
+        self.base_speed = 2
 
         self.state = "move"
         self.state_timer = 0
@@ -71,6 +90,13 @@ class ShooterEnemy(Enemy):
 
         self.bullets = []
 
+    @property
+    def max_speed(self):
+            return self.base_speed * self.speed_multiplier
+    @property
+    def max_damage(self):
+            return self.base_damage * self.damage_multiplier
+        
     def update(self, player_pos):
         self.state_timer += 1
 
@@ -80,23 +106,31 @@ class ShooterEnemy(Enemy):
         if self.state == "shoot":
 
             direction = player_pos - self.pos
-
             if direction.length() != 0:
                 direction = direction.normalize()
 
             # fire barrage
             if self.state_timer % 5 == 0:
-                bullet = Enemy_Bullet(self.pos, direction, self.damage)
+                bullet = Enemy_Bullet(self.pos, direction, self.max_damage)
                 self.bullets.append(bullet)
 
-            # after barrage, move somewhere else
+            strafe = pygame.Vector2(-direction.y, direction.x)
+            self.velocity += strafe * 0.1 
+
+            if self.velocity.length() > self.max_speed:
+                self.velocity.scale_to_length(self.max_speed)
+
+            total_velocity = self.velocity + self.knockback
+            self.pos += total_velocity
+            self.knockback *= self.knockback_decay
+
+            # transition
             if self.state_timer > 120:
                 self.state = "move"
                 self.state_timer = 0
-
                 self.target_pos = pygame.Vector2(
-                    random.randint(100, width-100),
-                    random.randint(100, height-100)
+                    random.randint(100, width - 100),
+                    random.randint(100, height - 100)
                 )
 
         # -------------------
@@ -114,6 +148,10 @@ class ShooterEnemy(Enemy):
             if self.velocity.length() > self.max_speed:
                 self.velocity.scale_to_length(self.max_speed)
 
+            total_velocity = self.velocity + self.knockback
+            self.pos += total_velocity
+            self.knockback *= self.knockback_decay
+
             self.pos += self.velocity
 
             distance = self.pos.distance_to(self.target_pos)
@@ -123,6 +161,7 @@ class ShooterEnemy(Enemy):
                 self.state_timer = 0
 
         # update bullets
+        self.bullets = [b for b in self.bullets if b.alive()]
         for bullet in self.bullets:
             bullet.update()
 

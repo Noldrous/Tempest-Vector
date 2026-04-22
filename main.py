@@ -305,11 +305,8 @@ class Game:
             shield_bar.draw(self.screen, player.shield)
             
             # Wave info display
-            wave_text = self.font.render(f"Wave: {wave_manager.get_current_wave_number()}", True, "white")
+            wave_text = self.font.render(f"Wave: {wave_manager.current_wave}", True, "white")
             self.screen.blit(wave_text, (20, 60))
-            
-            enemy_count_text = self.font.render(f"Enemies: {len(wave_manager.get_all_enemies())}", True, "white")
-            self.screen.blit(enemy_count_text, (20, 100))
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
@@ -358,10 +355,10 @@ class Game:
 
             #wave management -------------------------------------------------------------------------------------------------------------------------------------------------------
             wave_manager.update(dt)
-            all_enemies = wave_manager.get_all_enemies()
+            all_enemies = wave_manager.all_enemies
 
-            current_wave = wave_manager.get_current_wave_number()
-            if not wave_manager.is_wave_complete() and current_wave != last_announced_wave:
+            current_wave = wave_manager.current_wave
+            if current_wave != last_announced_wave:
                 wave_message = f"Wave {current_wave}"
                 wave_message_time = pygame.time.get_ticks()
                 last_announced_wave = current_wave
@@ -387,22 +384,7 @@ class Game:
                         if bullet in player_bullets:
                             player_bullets.remove(bullet)
                         break
-            
-            # Enemy collision with player
-            for enemy in all_enemies:
-                if enemy.__class__.__name__ == "SeekerEnemy":
-                    distance = player.ship_pos.distance_to(enemy.pos)
-                    if distance < player.ship_radius + enemy.hit_radius:
-                        player.take_damage(enemy.contact_damage)
-                        break
-            
-            for enemy in all_enemies:
-                if enemy.__class__.__name__ == "ShooterEnemy":
-                    distance = player.ship_pos.distance_to(enemy.pos)
-                    if distance < player.ship_radius + enemy.hit_radius:
-                        player.take_damage(enemy.contact_damage)
-                        break
-            
+
             # Enemy bullets hit player
             for enemy in all_enemies:
                 if hasattr(enemy, 'bullets'):
@@ -414,20 +396,29 @@ class Game:
                             enemy.bullets.remove(bullet)
                             break
             
+            # Enemy collision with player
+            for enemy in all_enemies[:]:
+                distance = player.ship_pos.distance_to(enemy.pos)
+                
+                if distance < player.ship_radius + enemy.hit_radius:
+
+                    player.take_damage(enemy.max_damage)
+                    enemy.take_damage(player.ramming_damage)
+
+                    direction = enemy.pos - player.ship_pos
+                    if direction.length() != 0:
+                        direction = direction.normalize()
+
+                        enemy.knockback += direction * 10
+                        player.velocity -= direction * 10
+            
+            
+            
             # Wave start message
             if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
                 wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
                 wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
-
-            # Victory condition
-            if wave_manager.is_wave_complete():
-                victory_text = self.font.render("ALL WAVES COMPLETE! VICTORY!", True, (0, 255, 0))
-                victory_rect = victory_text.get_rect(center=(self.width // 2, self.height // 2))
-                self.screen.blit(victory_text, victory_rect)
-                pygame.display.update()
-                pygame.time.wait(3000)
-                self.start_menu()
 
             pygame.display.update()
 
