@@ -23,7 +23,7 @@ class Game:
             "celestial1": load_image_alpha('background/celestial1.png'),
             "celestial2": load_image_alpha('background/celestial2.png'),
             "celestial3": load_image_alpha('background/celestial3.png'),
-            "title": load_image_alpha('ui/Title.png'),
+            "title": load_image_alpha('ui/title.png'),
             "play_button1": load_image_alpha('ui/button_play.png'),
             "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
             "credits_button1": load_image_alpha('ui/button_credits.png'),
@@ -62,7 +62,7 @@ class Game:
         self.bg_positions[key] = x
 
     def start_menu(self):
-        title = pygame.transform.scale(self.assets["title"], (self.width / 2.4, self.height / 2.9))
+        title = pygame.transform.scale(self.assets["title"], (self.width // 1.6, self.height // 2.5))
         play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))
         play2 = pygame.transform.scale(self.assets["play_button2"], (self.width // 8, self.height // 14))
         credits1 = pygame.transform.scale(self.assets["credits_button1"], (self.width // 8, self.height // 14))
@@ -75,7 +75,7 @@ class Game:
         play_rect = play1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 5))
         credit_rect = credits1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
         quit_rect = quit1.get_rect(topright=(self.width - 50, 50))
-        title_rect = title.get_rect(topleft=(75, 75))
+        title_rect = title.get_rect(topleft=(50, 50))
 
         play_pressed = False
 
@@ -87,7 +87,7 @@ class Game:
 
         ship_base_x = self.width // 3
         ship_move_x = 0
-        ship_y = self.height // 1.9
+        ship_y = self.height // 1.7
         ship_particles = []
 
         while True:
@@ -411,9 +411,7 @@ class Game:
 
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
-            
-            
-            
+
             # Wave start message
             if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
                 wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
