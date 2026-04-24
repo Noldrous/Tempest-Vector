@@ -62,11 +62,12 @@ class WaveManager:
         # scale difficulty per wave
         enemy_type_roll = random.random()
 
-        if enemy_type_roll < 0.6:
+        if enemy_type_roll < 0.3:
             enemy = SeekerEnemy(x, y)
-        
-        else:
+        if enemy_type_roll < 0.6:
             enemy = ShooterEnemy(x, y)
+        else:
+            enemy = TeleporterEnemy(x, y)
 
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier

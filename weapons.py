@@ -1,6 +1,5 @@
 from settings import *
 import random
-import time
 
 class Bullet:
     def __init__(self, x, y, angle, speed=20, size='sm', lifetime=150, damage=10, max_distance=None):
