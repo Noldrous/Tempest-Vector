@@ -64,11 +64,11 @@ class WaveManager:
 
         if enemy_type_roll < 0.3:
             enemy = SeekerEnemy(x, y)
-        if enemy_type_roll < 0.6:
-            enemy = ShooterEnemy(x, y)
+        elif enemy_type_roll < 0.6:
+            enemy = ChargerBoss(x, y)
         else:
             enemy = TeleporterEnemy(x, y)
-
+          
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier
         self.all_enemies.append(enemy)

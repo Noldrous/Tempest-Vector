@@ -11,7 +11,7 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Tempest Vector")
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont("Arial", 40)
+        self.font = pygame.font.Font("assets/font/m04.TTF", 20)
         self.running = True
         
         self.assets = {
@@ -199,8 +199,8 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            play_text = self.font.render("Resume", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
+            play_text = self.font.render("Resume", False, "white")
+            quit_text = self.font.render("Quit", False, "white")
 
             self.screen.blit(play_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
@@ -232,8 +232,8 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            try_again_text = self.font.render("Try Again", True, "white")
-            quit_text = self.font.render("Quit", True, "white")
+            try_again_text = self.font.render("Try Again", False, "white")
+            quit_text = self.font.render("Quit", False, "white")
 
             self.screen.blit(try_again_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
@@ -247,13 +247,13 @@ class Game:
         player.weapon = weapons.main  # Connect player to the weapons system
 
         # HEALTH BAR
-        hpBar_x = self.width // 2 - 400
-        hpBar_y = self.height - 40
-        health_bar = HealthBar(hpBar_x, hpBar_y, 800, 20, player.health)
+        hpBar_x = 50
+        hpBar_y = self.height - 550
+        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500, player.health)
         
-        shield_bar_x = self.width // 2 - 400
-        shield_bar_y = self.height - 70
-        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 800, 20, player.shield)
+        shield_bar_x = 75
+        shield_bar_y = self.height - 550
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500, player.shield)
 
         # Initialize Wave Manager
         wave_manager = WaveManager()
@@ -303,39 +303,15 @@ class Game:
 
             health_bar.draw(self.screen, player.health)
             shield_bar.draw(self.screen, player.shield)
-            
-            # Wave info display
-            wave_text = self.font.render(f"Wave: {wave_manager.current_wave}", True, "white")
-            self.screen.blit(wave_text, (20, 60))
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
-                bullets = player.weapon.shoot(
-                    player.ship_pos.x,
-                    player.ship_pos.y,
-                    player.angle
-                )
+            firing = pygame.mouse.get_pressed()[0]
+            player.shoot(player.weapon, player_bullets, weapons, firing)
 
-                if bullets:
-                    player_bullets.extend(bullets)
-
-                    # recoil ONLY when actual shot happens
-                    recoil_strength = {
-                        "Machine Gun": 1,
-                        "Shotgun": 5,
-                        "Rail Gun": 6,
-                        "Rockets": 8
-                    }
-
-                    player.apply_recoil(
-                        player.angle,
-                        recoil_strength[player.weapon.name]
-                    )
-
-                # weapon swap check
-                if player.weapon.ammo <= 0:
-                    weapons.cycle_weapon()
-                    player.weapon = weapons.main
+            # weapon swap check
+            if player.weapon.ammo <= 0:
+                weapons.cycle_weapon()
+                player.weapon = weapons.main
 
             for bullet in player_bullets:
                 bullet.update()
@@ -344,24 +320,38 @@ class Game:
             player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
-            status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
+            status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", False, "white")
             self.screen.blit(status_text, (20, 20))
 
             # Display "changing weapon" message if cycling
             if weapons.should_show_message():
-                message_text = self.font.render("Swapping Weapon...", True, (255, 165, 0))
+                message_text = self.font.render("Swapping Weapon...", False, (255, 165, 0))
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
             #wave management -------------------------------------------------------------------------------------------------------------------------------------------------------
             wave_manager.update(dt)
             all_enemies = wave_manager.all_enemies
-
             current_wave = wave_manager.current_wave
-            if current_wave != last_announced_wave:
-                wave_message = f"Wave {current_wave}"
-                wave_message_time = pygame.time.get_ticks()
-                last_announced_wave = current_wave
+
+            # Wave info display
+            if wave_manager.wave_complete and current_wave > 0:
+                timer = wave_manager.wave_timer
+                delay = wave_manager.wave_delay
+
+                if timer < 1.0:
+                    alpha = int((timer / 1.0) * 255)
+                elif timer < delay - 1.0:
+                    alpha = 255
+                else:
+                    alpha = int(((delay - timer) / 1.0) * 255)
+   
+                alpha = max(0, min(255, alpha))
+                
+                announce_surface = self.font.render(f"WAVE {current_wave} CLEARED", False, (100, 255, 100))
+                announce_surface.set_alpha(alpha)
+                
+                self.screen.blit(announce_surface, (self.width // 2 - announce_surface.get_width() // 2, 100))
 
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in all_enemies:
@@ -379,10 +369,11 @@ class Game:
                 for enemy in all_enemies:
                     distance = enemy.pos.distance_to(bullet.pos)
 
-                    if distance < enemy.size + bullet.radius:
+                    if distance < enemy.hit_radius + bullet.radius:
                         enemy.take_damage(bullet.damage)
                         if bullet in player_bullets:
-                            player_bullets.remove(bullet)
+                            if bullet.piercing == False:
+                                player_bullets.remove(bullet)
                         break
 
             # Enemy bullets hit player
@@ -402,7 +393,7 @@ class Game:
                 
                 if distance < player.ship_radius + enemy.hit_radius:
 
-                    player.take_damage(enemy.max_damage)
+                    player.take_damage(enemy.final_damage)
                     enemy.take_damage(player.ramming_damage)
 
                     direction = enemy.pos - player.ship_pos
@@ -412,13 +403,7 @@ class Game:
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
 
-            # Wave start message
-            if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
-                wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
-                wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
-                self.screen.blit(wave_msg_surface, wave_msg_rect)
-
             pygame.display.update()
 
 if __name__ == "__main__":
-    Game().start_menu()
+    Game().game()

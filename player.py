@@ -6,7 +6,7 @@ class Player:
         self.ship_pos = pygame.Vector2(width//2, height // 2 + 500)
         self.health = 200
         self.shield = 100
-        self.shield_regeneration = 0.1
+        self.shield_regeneration = 1
         self.max_shield = 100
         self.shield_regen_delay = 240
         self.ram_damage = 2
@@ -115,6 +115,28 @@ class Player:
         )
         self.velocity += recoil * strength
 
+    def shoot(self, weapon, player_bullets, weapons, firing):
+        if weapon is None:
+            return
+        
+        if self.entering:
+            return
+
+        if firing and not weapons.should_show_message():
+            bullets = weapon.shoot(self.ship_pos.x, self.ship_pos.y, self.angle)
+
+            if bullets:
+                player_bullets.extend(bullets)
+
+                recoil_strength = {
+                    "Machine Gun": 1,
+                    "Shotgun": 5,
+                    "Rail Gun": 6,
+                    "Rockets": 8
+                }
+
+                self.apply_recoil(self.angle, recoil_strength.get(weapon.name, 3))
+
     def entrance(self):
         target = pygame.Vector2(width // 2, height // 2)
 
@@ -139,8 +161,10 @@ class HealthBar:
 
     def draw(self, screen, current_health):
         health_ratio = current_health / self.max_health
+        current_height = self.h * health_ratio
         pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.w, self.h))
-        pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y, self.w * health_ratio, self.h))
+        pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y + (self.h - current_height), self.w, current_height))
+        pygame.draw.rect(screen, (120, 0, 0), (self.x, self.y, self.w, self.h), 4)
 
 class ShieldBar:
     def __init__(self, x, y, w, h, max_shield):
@@ -152,5 +176,7 @@ class ShieldBar:
 
     def draw(self, screen, current_shield):
         shield_ratio = current_shield / self.max_shield
+        current_height = self.h * shield_ratio
         pygame.draw.rect(screen, (0, 0, 255), (self.x, self.y, self.w, self.h))
-        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y, self.w * shield_ratio, self.h))
+        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y + (self.h - current_height), self.w, current_height))
+        pygame.draw.rect(screen, (0, 0, 130), (self.x, self.y, self.w, self.h), 4)
