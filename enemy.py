@@ -1,25 +1,37 @@
 from settings import *
+import spritesheet
 
 class Enemy:
     def __init__(self, x, y):
         self.pos = pygame.Vector2(x, y)
-        self.speed = 4
         self.size = 20
-
         self.hit_radius = self.size
-
+        self.velocity = pygame.Vector2(0, 0)
+        self.health = 1
+        self.base_damage = 1
+        self.base_speed = 1
+        self.damage_multiplier = 1
+        self.speed_multiplier = 1
+        self.knockback = pygame.Vector2(0, 0)
+        self.knockback_decay = 0.85
+        
     def take_damage(self, damage):
         self.health -= damage
 
 class Enemy_Bullet:
-    def __init__(self, pos, direction):
+    def __init__(self, pos, direction, damage, radius):
         self.pos = pygame.Vector2(pos)
         self.vel = direction.normalize() * 10
-        self.radius = 4
-        self.damage = 3
+        self.radius = radius
+        self.damage = damage
+        self.lifetime = 120
 
     def update(self):
         self.pos += self.vel
+        self.lifetime -= 1
+
+    def alive(self):
+        return self.lifetime > 0
 
     def draw(self, screen):
         pygame.draw.circle(screen, (255,200,50),
@@ -30,100 +42,366 @@ class SeekerEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.health = 20
-        self.contact_damage = 0.5
+        self.base_damage = 10
+        self.base_speed = 3
+        self.angle = 0
+        self.turn_speed = 0.3
+        self.sprite_sheet_image = load_image_alpha("enemies/seeker.png")
+        self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
+        self.animation_list = []
+        self.animation_steps = 4
+        self.last_update = pygame.time.get_ticks()
+        self.animation_cooldown = 100
+        self.frame = 0
+        for x in range(self.animation_steps):
+            self.animation_list.append(self.sprite_sheet.get_image(x, 0, 33, 30, 1.5))
+
+    @property
+    def max_speed(self):
+        return self.base_speed * self.speed_multiplier
+    @property
+    def max_damage(self):
+        return self.base_damage * self.damage_multiplier
 
     def update(self, player_pos):
-        direction = player_pos - self.pos
+        self.current_time = pygame.time.get_ticks()
+        if self.current_time - self.last_update >= self.animation_cooldown:
+            self.frame += 1
+            self.last_update = self.current_time
+            if self.frame >= len(self.animation_list):
+                self.frame = 0
 
-        if direction.length() != 0:
-            direction = direction.normalize()
+        dx = player_pos.x - self.pos.x
+        dy = player_pos.y - self.pos.y
+        angle = math.atan2(dy, dx)
+        
+        thrust = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
+        self.velocity += thrust 
+        if self.velocity.length() > self.max_speed:
+            self.velocity.scale_to_length(self.max_speed)
+        
+        total_velocity = self.velocity + self.knockback
+        self.pos += total_velocity
+        self.knockback *= self.knockback_decay
+        target_angle = angle
 
-        self.pos += direction * self.speed
+        diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+
+        if diff > self.turn_speed:
+            diff = self.turn_speed
+        elif diff < -self.turn_speed:
+            diff = -self.turn_speed
+
+        self.angle += diff
 
     def draw(self, screen):
-        pygame.draw.circle(
-            screen,
-            (255, 80, 80),
-            (int(self.pos.x), int(self.pos.y)),
-            self.size, 2
-        )
+        rotated_image = pygame.transform.rotate(self.animation_list[self.frame], -math.degrees(self.angle) - 90)
+        rect = rotated_image.get_rect(center=self.pos)
+        screen.blit(rotated_image, rect.topleft)
 
 class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.health = 100
-        self.contact_damage = 1
-        self.speed = 100
-        self.safe_distance = 200
+        self.base_damage = 2
+        self.base_speed = 2
+        self.angle = 0
+        self.turn_speed = 0.09
 
-        self.state = "shoot"   # shoot or move
+        self.state = "move"
         self.state_timer = 0
 
-        self.target_pos = pygame.Vector2(x, y)
-
+        self.target_pos = pygame.Vector2(
+            random.randint(100, width-100),
+            random.randint(100, height-100)
+        )
         self.bullets = []
 
-    def update(self, player_pos):
+        self.sprite_sheet_image = load_image_alpha("enemies/shooter.png")
+        self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
+        self.animations = {
+            "move":  [],
+            "shoot": []
+        }
+        self.animation_cooldowns = {
+            "move": 150,
+            "shoot": 25,
+        }
+        self.animation_list = self.animations[self.state]
+        self.animation_steps = 5
+        self.last_update = pygame.time.get_ticks()
+        self.animation_cooldown = self.animation_cooldowns[self.state]
+        self.frame = 0
+        for x in range(self.animation_steps):
+            self.animations["move"].append(self.sprite_sheet.get_image(x, 2, 47, 36, 1.5))
+            self.animations["shoot"].append(self.sprite_sheet.get_image(x, 1, 47, 36, 1.5))
 
+    @property
+    def max_speed(self):
+            return self.base_speed * self.speed_multiplier
+    @property
+    def max_damage(self):
+            return self.base_damage * self.damage_multiplier
+        
+    def update(self, player_pos):
+        self.current_time = pygame.time.get_ticks()
+        if self.current_time - self.last_update >= self.animation_cooldown:
+            self.frame += 1
+            self.last_update = self.current_time
+            if self.frame >= len(self.animation_list):
+                self.frame = 0
         self.state_timer += 1
+
+        self.animation_list = self.animations[self.state]
+        self.animation_cooldown = self.animation_cooldowns[self.state]
 
         # -------------------
         # SHOOT STATE
         # -------------------
         if self.state == "shoot":
-
             direction = player_pos - self.pos
+            direction = direction.normalize()
 
-            if direction.length() != 0:
-                direction = direction.normalize()
+            forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
+            side = pygame.Vector2(-forward.y, forward.x)
 
-            # fire barrage
             if self.state_timer % 5 == 0:
-                bullet = Enemy_Bullet(self.pos, direction)
-                self.bullets.append(bullet)
+                offset = 8
+                bullet_pos = self.pos + forward * 15
+                bullet1 = Enemy_Bullet(bullet_pos + side * offset, forward, self.max_damage, 3)
+                bullet2 = Enemy_Bullet(bullet_pos - side * offset, forward, self.max_damage, 3)
+                
 
-            # after barrage, move somewhere else
-            if self.state_timer > 120:
+                self.bullets.append(bullet1)
+                self.bullets.append(bullet2)
+
+            strafe = pygame.Vector2(-direction.y, direction.x)
+            self.velocity += strafe * 0.98 
+
+            if self.velocity.length() > self.max_speed:
+                self.velocity.scale_to_length(self.max_speed)
+
+            total_velocity = self.velocity + self.knockback
+            self.pos += total_velocity
+            self.knockback *= self.knockback_decay
+
+            # transition
+            if self.state_timer > 200:
                 self.state = "move"
                 self.state_timer = 0
-
                 self.target_pos = pygame.Vector2(
-                    random.randint(100, width-100),
-                    random.randint(100, height-100)
+                    random.randint(100, width - 100),
+                    random.randint(100, height - 100)
                 )
+
+            target_angle = math.atan2(player_pos.y - self.pos.y, player_pos.x - self.pos.x)
+            self.target_angle = target_angle
+
+            diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+
+            if diff > self.turn_speed:
+                diff = self.turn_speed
+            elif diff < -self.turn_speed:
+                diff = -self.turn_speed
+
+            self.angle += diff
 
         # -------------------
         # MOVE STATE
         # -------------------
         elif self.state == "move":
+            self.velocity *= 0.98
+            dx = self.target_pos.x - self.pos.x
+            dy = self.target_pos.y - self.pos.y
+            angle = math.atan2(dy, dx)
 
-            direction = self.target_pos - self.pos
-            distance = direction.length()
+            thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
+            self.velocity += thrust
 
-            if distance > 0:
-                direction = direction.normalize()
+            if self.velocity.length() > self.max_speed:
+                self.velocity.scale_to_length(self.max_speed)
 
-            if distance > self.speed:
-                self.pos += direction * self.speed
-            else:
-                self.pos = self.target_pos
+            total_velocity = self.velocity + self.knockback
+            self.pos += total_velocity
+            self.knockback *= self.knockback_decay
+
+            distance = self.pos.distance_to(self.target_pos)
+
+            if distance < 10:
                 self.state = "shoot"
                 self.state_timer = 0
 
+            target_angle = angle
+
+            diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+
+            if diff > self.turn_speed:
+                diff = self.turn_speed
+            elif diff < -self.turn_speed:
+                diff = -self.turn_speed
+
+            self.angle += diff
+
         # update bullets
+        self.bullets = [b for b in self.bullets if b.alive()]
         for bullet in self.bullets:
             bullet.update()
 
     def draw(self, screen):
+        rotated_image = pygame.transform.rotate(self.animation_list[self.frame], -math.degrees(self.angle) - 90)
+        rect = rotated_image.get_rect(center=self.pos)
+        screen.blit(rotated_image, rect.topleft)
 
-        rect = pygame.Rect(
-            self.pos.x - self.size,
-            self.pos.y - self.size,
-            self.size * 2,
-            self.size * 2
+        for bullet in self.bullets:
+            bullet.draw(screen)
+
+class TeleporterEnemy(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.health = 100
+        self.base_damage = 5
+        self.base_speed = 100
+        self.angle = 0
+
+        self.state = "teleport"
+        self.state_timer = 0
+
+        self.target_pos = pygame.Vector2(
+            random.randint(100, width-100),
+            random.randint(100, height-100)
         )
+        self.bullets = []
+        self.sprite_sheet_image = load_image_alpha("enemies/teleporter.png")
+        self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
+        self.animations = {
+            "teleport":  [],
+            "shoot": []
+        }
+        self.animation_cooldowns = {
+            "teleport": 150,
+            "shoot": 50,
+        }
 
-        pygame.draw.rect(screen, (80,120,255), rect, 3)
+        self.animation_list = self.animations[self.state]
+        self.animation_cooldown = self.animation_cooldowns[self.state]
 
+        self.last_update = pygame.time.get_ticks()
+        self.frame = 0
+        for x in range(4):
+            self.animations["teleport"].append(self.sprite_sheet.get_image(x, 0, 66, 66, 0.8))
+        for x in range(8):
+            self.animations["shoot"].append(self.sprite_sheet.get_image(x, 0, 66, 66, 0.8))
+        
+
+    @property
+    def max_speed(self):
+            return self.base_speed * self.speed_multiplier
+    @property
+    def max_damage(self):
+            return self.base_damage * self.damage_multiplier
+        
+    def update(self, player_pos):
+        self.current_time = pygame.time.get_ticks()
+        if self.current_time - self.last_update >= self.animation_cooldown:
+            self.frame += 1
+            self.last_update = self.current_time
+            if self.frame >= len(self.animation_list):
+                self.frame = 0
+        self.state_timer += 1
+
+        self.animation_list = self.animations[self.state]
+        self.animation_cooldown = self.animation_cooldowns[self.state]
+
+        # -------------------
+        # SHOOT STATE
+        # -------------------
+        if self.state == "shoot":
+            forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
+            backward = pygame.Vector2(-forward.x, -forward.y)
+            side_right = pygame.Vector2(-forward.y, forward.x)
+            side_left = pygame.Vector2(forward.y, -forward.x)
+            forward_left = forward.rotate(-45)
+            forward_right = forward.rotate(45)
+            backward_left = backward.rotate(45)
+            backward_right = backward.rotate(-45)
+
+
+            if self.state_timer % 20 == 0:
+                bullet1 = Enemy_Bullet(self.pos, forward, self.max_damage, 8)
+                bullet2 = Enemy_Bullet(self.pos, backward, self.max_damage, 8)
+                bullet3 = Enemy_Bullet(self.pos, side_left, self.max_damage, 8)
+                bullet4 = Enemy_Bullet(self.pos, side_right, self.max_damage, 8)
+                bullet5 = Enemy_Bullet(self.pos, forward_left, self.max_damage, 8)
+                bullet6 = Enemy_Bullet(self.pos, forward_right, self.max_damage, 8)
+                bullet7 = Enemy_Bullet(self.pos, backward_left, self.max_damage, 8)
+                bullet8 = Enemy_Bullet(self.pos, backward_right, self.max_damage, 8)
+                
+
+                self.bullets.append(bullet1)
+                self.bullets.append(bullet2)
+                self.bullets.append(bullet3)
+                self.bullets.append(bullet4)
+                self.bullets.append(bullet5)
+                self.bullets.append(bullet6)
+                self.bullets.append(bullet7)
+                self.bullets.append(bullet8)
+
+
+            drift = pygame.Vector2(
+                random.uniform(-0.05,0.05),
+                random.uniform(-0.05,0.05)
+            )
+
+            self.velocity += drift
+            self.velocity *= 0.99
+
+            # limit speed
+            if self.velocity.length() > self.max_speed:
+                self.velocity.scale_to_length(self.max_speed)
+
+            total_velocity = self.velocity + self.knockback
+            self.pos += total_velocity
+            self.knockback *= self.knockback_decay
+            
+
+            # transition
+            if self.state_timer > 500:
+                self.state = "teleport"
+                self.state_timer = 0
+                self.frame = 0
+                self.target_pos = pygame.Vector2(
+                    random.randint(100, width - 100),
+                    random.randint(100, height - 100)
+                )
+
+        # -------------------
+        # TELEPORT STATE
+        # -------------------
+        elif self.state == "teleport":
+            direction = self.target_pos - self.pos
+            distance = direction.length()
+
+            blink_speed = 40
+
+            if distance > blink_speed:
+                direction = direction.normalize()
+                self.pos += direction * blink_speed
+            else:
+                if self.state_timer > 50:
+                    self.state = "shoot"
+                    self.state_timer = 0
+                    self.frame = 0
+
+        # update bullets
+        self.bullets = [b for b in self.bullets if b.alive()]
+        for bullet in self.bullets:
+            bullet.update()
+
+    def draw(self, screen):
+        image = self.animation_list[self.frame]
+        rect = image.get_rect(center=self.pos)
+        screen.blit(image, rect.topleft)
+
+        # draw bullets
         for bullet in self.bullets:
             bullet.draw(screen)
