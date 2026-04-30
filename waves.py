@@ -19,6 +19,8 @@ class WaveManager:
 
     def setup_wave(self):
         self.wave_complete = False
+        self.upgrades_pending = False
+        self.upgrade_trigger_delay = 1.0
         self.current_wave += 1
         self.enemies_spawned = 0
         self.spawn_timer = 0
@@ -32,18 +34,22 @@ class WaveManager:
     def update(self, delta_time):
         self.spawn_timer += delta_time
 
-        # spawn enemies over time
+        # Spawn enemies during wave
         if self.enemies_spawned < self.enemy_count:
             if self.spawn_timer >= self.spawn_interval:
                 self.spawn_enemy()
                 self.spawn_timer = 0
-                
                 self.enemies_spawned += 1
+                return
 
         # next wave only when all enemies are dead
         if self.enemies_spawned >= self.enemy_count and len(self.all_enemies) == 0:
             self.wave_complete = True
             self.wave_timer += delta_time
+            
+            if not hasattr(self, 'upgrades_pending'):
+                self.upgrades_pending = False
+            self.upgrades_pending = True
 
             if self.wave_timer >= self.wave_delay:
                 self.wave_timer = 0
@@ -64,11 +70,11 @@ class WaveManager:
 
         if enemy_type_roll < 0.3:
             enemy = SeekerEnemy(x, y)
-        elif enemy_type_roll < 0.6:
-            enemy = ChargerBoss(x, y)
+        if enemy_type_roll < 0.6:
+            enemy = ShooterEnemy(x, y)
         else:
             enemy = TeleporterEnemy(x, y)
-          
+
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier
         self.all_enemies.append(enemy)

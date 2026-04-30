@@ -3,6 +3,7 @@ from player import *
 from enemy import *
 from weapons import *
 from waves import *
+from upgrades import *
 
 class Game:
     def __init__(self):
@@ -11,7 +12,7 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Tempest Vector")
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font("assets/font/m04.TTF", 20)
+        self.font = pygame.font.Font("assets/font/black-and-white.ttf", 20)
         self.running = True
         
         self.assets = {
@@ -30,7 +31,7 @@ class Game:
             "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
             "quit_button1": load_image_alpha('ui/exit_button.png'),
             "quit_button2": load_image_alpha('ui/sad.png'),
-            "player_ship": load_image_alpha('player/player.png'),
+            "player_ship": load_image_alpha('player/shiper.png'),
             "seeker": load_image_alpha('enemies/seeker.png'),
         }
 
@@ -69,6 +70,19 @@ class Game:
         credits2 = pygame.transform.scale(self.assets["credits_button2"], (self.width // 8, self.height // 14))
         quit1 = self.assets["quit_button1"]
         quit2 = self.assets["quit_button2"]
+
+        sprite_sheet = SpriteSheet(self.assets["player_ship"])
+        menu_frames = []
+        frame_width = 48
+        frame_height = 48
+        scale = 4  
+        for i in range(12):  
+            frame = sprite_sheet.get_image(i, 3, frame_width, frame_height, scale)
+            frame = pygame.transform.rotate(frame, -90)
+            menu_frames.append(frame)
+        menu_frame_index = 0
+        menu_anim_speed = 0.1
+
         ship = pygame.transform.scale(self.assets["player_ship"], (240, 240))
         ship = pygame.transform.rotate(ship, -90)
         
@@ -92,6 +106,7 @@ class Game:
 
         while True:
             dt = self.clock.tick(60) / 1000.0   
+            self.sway_time += dt
             mouse = pygame.mouse.get_pos()
             
             for event in pygame.event.get():
@@ -146,6 +161,7 @@ class Game:
 
             ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
 
+            #particle
             if ship_move_x < width//2:  
                 pos = pygame.Vector2(
                     ship_rect.left + 75,
@@ -164,6 +180,12 @@ class Game:
             for particle in ship_particles:
                 particle.draw(self.screen)
             
+            #animation
+            menu_frame_index += menu_anim_speed
+            if menu_frame_index >= len(menu_frames):
+                menu_frame_index = 0
+
+            ship = menu_frames[int(menu_frame_index)]
 
             self.screen.blit(ship, ship_rect)
             
@@ -262,8 +284,21 @@ class Game:
         wave_message_duration = 2000
         last_announced_wave = 0
 
+        #UPGRADE SYSTEM
+        font_small = pygame.font.SysFont("Arial", 20)
+        font_large = pygame.font.SysFont("Arial", 28)
+
+        # GAME STATE
+        show_upgrade_screen = False
+        upgrade_trigger_time = 0
+        upgrade_fade_alpha = 0
+        upgrade_cards = []
+        upgrade_delay = 1.0  # 1 second delay before upgrade cards
+        game_time = 0.0
+
         while True:
-            dt = self.clock.tick(60) / 1000.0  # Delta time in seconds - Change 60 to 30 or 45 to slow down
+            dt = self.clock.tick(60) / 1000.0
+            game_time += dt
             mouse = pygame.mouse.get_pos()
 
             self.screen.blit(self.background, (0, 0))
@@ -285,10 +320,25 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_buttons = pygame.mouse.get_pressed()
-                    if pause_button.collidepoint(mouse) and mouse_buttons[0]:
-                        self.pause_menu()
+                if show_upgrade_screen:
+                    mouse_pos = pygame.mouse.get_pos()
+                    for i, card in enumerate(upgrade_cards):
+                        if card.handle_event(event, mouse_pos):
+                            Upgrade.apply_upgrade(player, weapons, card.title)
+                            print(f"Applied upgrade: {card.title}")
+                            upgrade_trigger_time = 0
+                            
+                            # Hide screen and reset for next wave
+                            show_upgrade_screen = False
+                            upgrade_cards = []
+                            wave_manager.upgrades_pending = False
+                            wave_manager.setup_wave()  # Start next wave
+                            break
+                else:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        mouse_buttons = pygame.mouse.get_pressed()
+                        if pause_button.collidepoint(mouse) and mouse_buttons[0]:
+                            self.pause_menu()
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
@@ -314,7 +364,7 @@ class Game:
                 player.weapon = weapons.main
 
             for bullet in player_bullets:
-                bullet.update()
+                bullet.update(all_enemies)
                 bullet.draw(self.screen)
 
             player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
@@ -329,29 +379,36 @@ class Game:
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
-            #wave management -------------------------------------------------------------------------------------------------------------------------------------------------------
-            wave_manager.update(dt)
+# Update waves EARLY
+            if not show_upgrade_screen:
+                wave_manager.update(dt)
+            
             all_enemies = wave_manager.all_enemies
+            
+            # Check for upgrade trigger with DELAY
+            if hasattr(wave_manager, 'upgrades_pending') and wave_manager.upgrades_pending and not show_upgrade_screen:
+                if upgrade_trigger_time == 0:
+                    upgrade_trigger_time = game_time  # Start delay timer
+                
+                elapsed_delay = game_time - upgrade_trigger_time
+                delay_progress = elapsed_delay / upgrade_delay
+                if delay_progress > 1.0:
+                    show_upgrade_screen = True
+                    upgrade_cards = Upgrade.generate_upgrades(self.width, self.height, font_small)
+                    upgrade_fade_alpha = 0  # Start fade in
+                elif delay_progress > 0.3:  # Show "WAVE CLEARED!" after 30% of delay
+                    # WAVE CLEARED message
+                    clear_msg = self.font.render("WAVE CLEARED!", True, (255, 255, 0))
+                    clear_msg.set_alpha(int(255 * (delay_progress - 0.5) / 0.9))
+                    clear_rect = clear_msg.get_rect(center=(self.width // 2, self.height // 3))
+                    self.screen.blit(clear_msg, clear_rect)
+            # all_enemies = wave_manager.all_enemies  # Moved up for bullet homing
+
             current_wave = wave_manager.current_wave
-
-            # Wave info display
-            if wave_manager.wave_complete and current_wave > 0:
-                timer = wave_manager.wave_timer
-                delay = wave_manager.wave_delay
-
-                if timer < 1.0:
-                    alpha = int((timer / 1.0) * 255)
-                elif timer < delay - 1.0:
-                    alpha = 255
-                else:
-                    alpha = int(((delay - timer) / 1.0) * 255)
-   
-                alpha = max(0, min(255, alpha))
-                
-                announce_surface = self.font.render(f"WAVE {current_wave} CLEARED", False, (100, 255, 100))
-                announce_surface.set_alpha(alpha)
-                
-                self.screen.blit(announce_surface, (self.width // 2 - announce_surface.get_width() // 2, 100))
+            if current_wave != last_announced_wave:
+                wave_message = f"Wave {current_wave}"
+                wave_message_time = pygame.time.get_ticks()
+                last_announced_wave = current_wave
 
             #enemies -------------------------------------------------------------------------------------------------------------------------------------------------------
             for enemy in all_enemies:
@@ -372,6 +429,8 @@ class Game:
                     if distance < enemy.hit_radius + bullet.radius:
                         enemy.take_damage(bullet.damage)
                         if bullet in player_bullets:
+                            if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
+                                bullet.explode(all_enemies, player_bullets)
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
                         break
@@ -403,7 +462,35 @@ class Game:
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
 
+
+# UPGRADE SCREEN - draw after wave clear
+            if show_upgrade_screen:
+                # Fade transition
+                upgrade_fade_alpha = min(255, upgrade_fade_alpha + 8)  # Fade in
+                
+                # Dark overlay with fade
+                overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+                overlay.fill((0, 0, 0, int(180 * (upgrade_fade_alpha / 255))))
+                self.screen.blit(overlay, (0, 0))
+                
+                # Fade title
+                title_surface = self.font.render("CHOOSE UPGRADE", True, (255, 255, 255))
+                title_surface.set_alpha(upgrade_fade_alpha)
+                title_rect = title_surface.get_rect(center=(self.width//2, self.height//6))
+                self.screen.blit(title_surface, title_rect)
+                
+                # Update and draw cards (cards have their own pop-up animation)
+                for card in upgrade_cards:
+                    card.update()
+                    card_surf = card.draw(self.screen, font_large, font_small)  # Get surface for alpha
+                    if hasattr(card_surf, 'set_alpha'):
+                        card_surf.set_alpha(upgrade_fade_alpha)
+            if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
+                wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
+                wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
+                self.screen.blit(wave_msg_surface, wave_msg_rect)
+
             pygame.display.update()
 
 if __name__ == "__main__":
-    Game().game()
+    Game().start_menu()

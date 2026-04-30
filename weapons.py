@@ -1,8 +1,9 @@
 from settings import *
 import random
 
+
 class Bullet:
-    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False):
+    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, explosion_radius=0, is_homing=False, seek_range=1000):
         self.pos = pygame.Vector2(x, y)
         self.start_pos = pygame.Vector2(x, y)
         self.velocity = pygame.Vector2(math.cos(angle) * speed, math.sin(angle) * speed)
@@ -11,8 +12,41 @@ class Bullet:
         self.damage = damage
         self.piercing = bullet_piercing
         self.max_distance = max_distance
+        self.explosion_radius = explosion_radius
+        self.is_homing = is_homing
+        self.seek_range = seek_range
+        self.exploded = False
+        self.color = (255, 255, 0)
 
-    def update(self):
+    def explode(self, all_enemies, player_bullets):
+        if self.exploded or self.explosion_radius == 0:
+            return
+            
+        # Damage all enemies in explosion radius
+        for enemy in all_enemies[:]:
+            distance = enemy.pos.distance_to(self.pos)
+            if distance < self.explosion_radius:
+                enemy.take_damage(self.damage // 2)
+        
+        # Visual explosion effect
+        for _ in range(20):
+            angle = random.uniform(0, 2*math.pi)
+            speed = random.uniform(2, 6)
+            offset_pos = self.pos + pygame.Vector2(math.cos(angle), math.sin(angle)) * self.explosion_radius * 0.5
+        
+        self.exploded = True
+        self.lifetime = 0  # Remove after explosion
+
+    def update(self, all_enemies=None):
+        if self.is_homing and all_enemies:
+            alive_enemies = [e for e in all_enemies if hasattr(e, 'health') and e.health > 0]
+            if alive_enemies:
+                nearest = min(alive_enemies, key=lambda e: e.pos.distance_to(self.pos))
+                dist = nearest.pos.distance_to(self.pos)
+                if dist < self.seek_range:
+                    target_dir = (nearest.pos - self.pos).normalize()
+                    self.velocity = self.velocity.lerp(target_dir * self.velocity.length(), 0.12)
+        
         self.pos += self.velocity
         self.lifetime -= 1
 
@@ -69,7 +103,9 @@ class Weapon:
                 self.bullet_lifetime,
                 self.damage,
                 max_distance=self.bullet_range,
-                bullet_piercing = self.bullet_piercing
+                bullet_piercing = self.bullet_piercing,
+                explosion_radius=60 if self.name == "Rockets" else 0,
+                is_homing=(self.name == "Rockets")
             ))
         return bullets
     
@@ -95,12 +131,12 @@ class Shotgun(Weapon):
             bullet_speed=30,
             ammo=10,
             rate=800,
-            damage=15,
+            damage=30,
             bullet_size=6,
             spread=50,
-            bullet_count=12,
+            bullet_count=8,
             bullet_lifetime=17,
-            bullet_piercing=True
+            bullet_piercing=False
         )
 
 class RailGun(Weapon):
@@ -115,7 +151,7 @@ class RailGun(Weapon):
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
-            bullet_piercing=True
+            bullet_piercing=False
         )
 
 class Rockets(Weapon):
@@ -133,7 +169,6 @@ class Rockets(Weapon):
             bullet_piercing=False
         )
 
-
 class Weapons:
     def __init__(self, cycle_delay=2000):
         self.queue = [MachineGun(), Shotgun(), RailGun(), Rockets()]
@@ -142,6 +177,7 @@ class Weapons:
         self.last_cycle_time = pygame.time.get_ticks()
         self.message_time = 0  # Time when message should be displayed
         self.message_duration = 800  # How long to show message in milliseconds
+        self.max_ammo_bonus = 0
         
         # Store original ammo for each weapon type
         self.original_ammo = {
@@ -174,7 +210,7 @@ class Weapons:
         old_weapon = self.main
         
         # Reload the old weapon to full ammo
-        old_weapon.ammo = self.original_ammo[old_weapon.name]
+        old_weapon.ammo = self.original_ammo[old_weapon.name] + self.max_ammo_bonus
         
         # Add reloaded weapon back to the end of the queue
         self.queue.append(old_weapon)
