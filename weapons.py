@@ -56,10 +56,16 @@ class Bullet:
 
     def is_alive(self):
         if self.lifetime <= 0:
+            # Explode when lifetime expires (for bullets with explosion_radius)
+            if self.explosion_radius > 0 and not self.exploded:
+                self.explode([], None)
             return False
         if self.max_distance is not None:
             distance = self.pos.distance_to(self.start_pos)
             if distance > self.max_distance:
+                # Explode when max distance reached (for bullets with explosion_radius)
+                if self.explosion_radius > 0 and not self.exploded:
+                    self.explode([], None)
                 return False
         return True
     

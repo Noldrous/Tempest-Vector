@@ -286,6 +286,14 @@ class Game:
             self.clock.tick(60)
 
     def game_over(self):
+        panel_width = self.width
+        right_panel_x = self.width
+        right_panel_targetx = 0
+        left_panel_x = -self.width
+        left_panel_targetx = 0
+
+        anim_speed = 20
+        
         while True:
             mouse = pygame.mouse.get_pos()
 
@@ -303,7 +311,10 @@ class Game:
                     if quit_button.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
-
+                        
+            right_panel_x = max(right_panel_targetx, right_panel_x - anim_speed)
+            left_panel_x = min(left_panel_targetx, left_panel_x + anim_speed)
+            
             try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
             quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
 
