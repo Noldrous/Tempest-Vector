@@ -99,9 +99,7 @@ class SeekerEnemy(Enemy):
         rotated_image = pygame.transform.rotate(self.animation_list[self.frame], -math.degrees(self.angle) - 90)
         rect = rotated_image.get_rect(center=self.pos)
         screen.blit(rotated_image, rect.topleft)
-
-        pygame.draw.circle(screen, (255,255,255), self.pos, self.hit_radius, 3)
-
+        
 class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -255,8 +253,6 @@ class ShooterEnemy(Enemy):
         rotated_image = pygame.transform.rotate(self.animation_list[self.frame], -math.degrees(self.angle) - 90)
         rect = rotated_image.get_rect(center=self.pos)
         screen.blit(rotated_image, rect.topleft)
-        
-        pygame.draw.circle(screen, (255,255,255), self.pos, self.hit_radius, 3)
 
         for bullet in self.bullets:
             bullet.draw(screen)
@@ -389,8 +385,6 @@ class TeleporterEnemy(Enemy):
         image = self.animation_list[self.frame]
         rect = image.get_rect(center=self.pos)
         screen.blit(image, rect.topleft)
-
-        pygame.draw.circle(screen, (255,255,255), self.pos, self.hit_radius, 3)
 
         # draw bullets
         for bullet in self.bullets:
@@ -541,7 +535,6 @@ class ChargerBoss(Enemy):
         rotated_image = pygame.transform.rotate(self.animation_list[self.frame], -math.degrees(self.angle) - 90)
         rect = rotated_image.get_rect(center=self.pos)
         screen.blit(rotated_image, rect.topleft)
-        
-        pygame.draw.circle(screen, (255,255,255), self.pos, self.hit_radius, 3)
+
         for bullet in self.bullets:
             bullet.draw(screen)
