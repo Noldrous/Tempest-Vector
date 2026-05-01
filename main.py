@@ -4,7 +4,6 @@ from enemy import *
 from weapons import *
 from waves import *
 from upgrades import *
-from particle import *
 
 class Game:
     def __init__(self):
@@ -13,7 +12,7 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Tempest Vector")
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font("assets/font/black-and-white.ttf", 20)
+        self.font = pygame.font.SysFont("Arial", 40)
         self.running = True
         
         self.assets = {
@@ -32,7 +31,7 @@ class Game:
             "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
             "quit_button1": load_image_alpha('ui/exit_button.png'),
             "quit_button2": load_image_alpha('ui/sad.png'),
-            "player_ship": load_image_alpha('player/shiper.png'),
+            "player_ship": load_image_alpha('player/player.png'),
             "seeker": load_image_alpha('enemies/seeker.png'),
         }
 
@@ -71,19 +70,6 @@ class Game:
         credits2 = pygame.transform.scale(self.assets["credits_button2"], (self.width // 8, self.height // 14))
         quit1 = self.assets["quit_button1"]
         quit2 = self.assets["quit_button2"]
-
-        sprite_sheet = SpriteSheet(self.assets["player_ship"])
-        menu_frames = []
-        frame_width = 48
-        frame_height = 48
-        scale = 4  
-        for i in range(12):  
-            frame = sprite_sheet.get_image(i, 3, frame_width, frame_height, scale)
-            frame = pygame.transform.rotate(frame, -90)
-            menu_frames.append(frame)
-        menu_frame_index = 0
-        menu_anim_speed = 0.1
-
         ship = pygame.transform.scale(self.assets["player_ship"], (240, 240))
         ship = pygame.transform.rotate(ship, -90)
         
@@ -162,7 +148,6 @@ class Game:
 
             ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
 
-            #particle
             if ship_move_x < width//2:  
                 pos = pygame.Vector2(
                     ship_rect.left + 75,
@@ -181,12 +166,6 @@ class Game:
             for particle in ship_particles:
                 particle.draw(self.screen)
             
-            #animation
-            menu_frame_index += menu_anim_speed
-            if menu_frame_index >= len(menu_frames):
-                menu_frame_index = 0
-
-            ship = menu_frames[int(menu_frame_index)]
 
             self.screen.blit(ship, ship_rect)
             
@@ -222,8 +201,8 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            play_text = self.font.render("Resume", False, "white")
-            quit_text = self.font.render("Quit", False, "white")
+            play_text = self.font.render("Resume", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
 
             self.screen.blit(play_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
@@ -255,8 +234,8 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            try_again_text = self.font.render("Try Again", False, "white")
-            quit_text = self.font.render("Quit", False, "white")
+            try_again_text = self.font.render("Try Again", True, "white")
+            quit_text = self.font.render("Quit", True, "white")
 
             self.screen.blit(try_again_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
@@ -270,13 +249,13 @@ class Game:
         player.weapon = weapons.main  # Connect player to the weapons system
 
         # HEALTH BAR
-        hpBar_x = 50
-        hpBar_y = self.height - 550
-        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500, player.health)
+        hpBar_x = self.width // 2 - 400
+        hpBar_y = self.height - 40
+        health_bar = HealthBar(hpBar_x, hpBar_y, 800, 20, player.health)
         
-        shield_bar_x = 75
-        shield_bar_y = self.height - 550
-        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500, player.shield)
+        shield_bar_x = self.width // 2 - 400
+        shield_bar_y = self.height - 70
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 800, 20, player.shield)
 
         # Initialize Wave Manager
         wave_manager = WaveManager()
@@ -289,12 +268,12 @@ class Game:
         font_small = pygame.font.SysFont("Arial", 20)
         font_large = pygame.font.SysFont("Arial", 28)
 
-        # GAME STATE
+# GAME STATE
         show_upgrade_screen = False
         upgrade_trigger_time = 0
         upgrade_fade_alpha = 0
         upgrade_cards = []
-        upgrade_delay = 2.0  # 1 second delay before upgrade cards
+        upgrade_delay = 1.0  # 1 second delay before upgrade cards
         game_time = 0.0
 
         while True:
@@ -354,15 +333,39 @@ class Game:
 
             health_bar.draw(self.screen, player.health)
             shield_bar.draw(self.screen, player.shield)
+            
+            # Wave info display
+            wave_text = self.font.render(f"Wave: {wave_manager.current_wave}", True, "white")
+            self.screen.blit(wave_text, (20, 60))
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            firing = pygame.mouse.get_pressed()[0]
-            player.shoot(player.weapon, player_bullets, weapons, firing)
+            if player.weapon is not None and pygame.mouse.get_pressed()[0] and not weapons.should_show_message():
+                bullets = player.weapon.shoot(
+                    player.ship_pos.x,
+                    player.ship_pos.y,
+                    player.angle
+                )
 
-            # weapon swap check
-            if player.weapon.ammo <= 0:
-                weapons.cycle_weapon()
-                player.weapon = weapons.main
+                if bullets:
+                    player_bullets.extend(bullets)
+
+                    # recoil ONLY when actual shot happens
+                    recoil_strength = {
+                        "Machine Gun": 1,
+                        "Shotgun": 5,
+                        "Rail Gun": 6,
+                        "Rockets": 8
+                    }
+
+                    player.apply_recoil(
+                        player.angle,
+                        recoil_strength[player.weapon.name]
+                    )
+
+                # weapon swap check
+                if player.weapon.ammo <= 0:
+                    weapons.cycle_weapon()
+                    player.weapon = weapons.main
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)
@@ -371,12 +374,12 @@ class Game:
             player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
-            status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", False, "white")
+            status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", True, "white")
             self.screen.blit(status_text, (20, 20))
 
             # Display "changing weapon" message if cycling
             if weapons.should_show_message():
-                message_text = self.font.render("Swapping Weapon...", False, (255, 165, 0))
+                message_text = self.font.render("Swapping Weapon...", True, (255, 165, 0))
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 self.screen.blit(message_text, message_rect)
 
@@ -422,20 +425,16 @@ class Game:
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
-# Player bullets hit enemies
+            # Player bullets hit enemies
             for bullet in player_bullets[:]:
                 for enemy in all_enemies:
                     distance = enemy.pos.distance_to(bullet.pos)
 
-                    if distance < enemy.hit_radius + bullet.radius:
+                    if distance < enemy.size + bullet.radius:
                         enemy.take_damage(bullet.damage)
-                        if bullet in player_bullets:
-                            if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
-                                bullet.explode(all_enemies, player_bullets)
-                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
-                                explosion_group.add(explosion)
-                            if bullet.piercing == False:
-                                player_bullets.remove(bullet)
+                        if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
+                            bullet.explode(all_enemies, player_bullets)
+                        player_bullets.remove(bullet)
                         break
 
             # Enemy bullets hit player
@@ -449,13 +448,13 @@ class Game:
                             enemy.bullets.remove(bullet)
                             break
             
-# Enemy collision with player
+            # Enemy collision with player
             for enemy in all_enemies[:]:
                 distance = player.ship_pos.distance_to(enemy.pos)
                 
                 if distance < player.ship_radius + enemy.hit_radius:
 
-                    player.take_damage(enemy.final_damage)
+                    player.take_damage(enemy.max_damage)
                     enemy.take_damage(player.ramming_damage)
 
                     direction = enemy.pos - player.ship_pos
@@ -465,12 +464,8 @@ class Game:
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
 
-            # Update and draw explosions
-            explosion_group.update()
-            explosion_group.draw(self.screen)
 
-
-# UPGRADE SCREEN
+# UPGRADE SCREEN - draw after wave clear
             if show_upgrade_screen:
                 # Fade transition
                 upgrade_fade_alpha = min(255, upgrade_fade_alpha + 8)  # Fade in
@@ -483,7 +478,7 @@ class Game:
                 # Fade title
                 title_surface = self.font.render("CHOOSE UPGRADE", True, (255, 255, 255))
                 title_surface.set_alpha(upgrade_fade_alpha)
-                title_rect = title_surface.get_rect(center=(self.width//2, self.height))
+                title_rect = title_surface.get_rect(center=(self.width//2, self.height//6))
                 self.screen.blit(title_surface, title_rect)
                 
                 # Update and draw cards (cards have their own pop-up animation)
