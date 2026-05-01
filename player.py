@@ -238,7 +238,7 @@ class Player:
             # rotate ship toward center
             self.angle = math.atan2(direction.y, direction.x)
 
-            self.ship_pos += direction * 0.05
+            self.ship_pos += direction * 0.09
 
             if direction.length() < 5:
                 self.entering = False

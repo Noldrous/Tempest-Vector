@@ -14,7 +14,7 @@ class WaveManager:
         self.setup_wave()
         
         self.wave_complete = False
-        self.wave_delay = 3
+        self.wave_delay = 4
         self.wave_timer = 0
 
     def setup_wave(self):
@@ -57,10 +57,10 @@ class WaveManager:
 
     def spawn_enemy(self):
         spawn_locations = [
-            (random.randint(0, width), -100),
-            (random.randint(0, width), height + 100),
-            (-100, random.randint(0, height)),
-            (width + 100, random.randint(0, height))
+            (random.randint(0, width), -200),
+            (random.randint(0, width), height + 200),
+            (-200, random.randint(0, height)),
+            (width + 200, random.randint(0, height))
         ]
 
         x, y = random.choice(spawn_locations)
@@ -70,7 +70,7 @@ class WaveManager:
 
         if enemy_type_roll < 0.3:
             enemy = SeekerEnemy(x, y)
-        if enemy_type_roll < 0.6:
+        elif enemy_type_roll < 0.6:
             enemy = ShooterEnemy(x, y)
         else:
             enemy = TeleporterEnemy(x, y)
