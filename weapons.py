@@ -1,25 +1,22 @@
 from settings import *
 import random
-from spritesheet import *
-
-
-
 
 
 class Bullet:
-    def __init__(self, x, y, angle, speed=20, size='sm', lifetime=150, damage=10, max_distance=None, explosion_radius=0, is_homing=False, seek_range=1000):
+    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, explosion_radius=0, is_homing=False, seek_range=1000):
         self.pos = pygame.Vector2(x, y)
         self.start_pos = pygame.Vector2(x, y)
         self.velocity = pygame.Vector2(math.cos(angle) * speed, math.sin(angle) * speed)
-        self.radius = 4 if size == 'sm' else 8 if size == 'md' else 11
+        self.radius = size
         self.lifetime = lifetime
         self.damage = damage
+        self.piercing = bullet_piercing
         self.max_distance = max_distance
         self.explosion_radius = explosion_radius
         self.is_homing = is_homing
         self.seek_range = seek_range
         self.exploded = False
-        self.color = (255, 255, 0) if size == 'sm' else (255, 0, 255) if size == 'md' else (255, 100, 0)
+        self.color = (255, 255, 0)
 
     def explode(self, all_enemies, player_bullets):
         if self.exploded or self.explosion_radius == 0:
@@ -54,19 +51,26 @@ class Bullet:
         self.lifetime -= 1
 
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.pos.x), int(self.pos.y)), self.radius)
+        pygame.draw.circle(screen, (255,255,255), (int(self.pos.x), int(self.pos.y)), self.radius)
+        pygame.draw.circle(screen, (100,100,100), (int(self.pos.x), int(self.pos.y)), self.radius, 2)
 
     def is_alive(self):
         if self.lifetime <= 0:
+            # Explode when lifetime expires (for bullets with explosion_radius)
+            if self.explosion_radius > 0 and not self.exploded:
+                self.explode([], None)
             return False
         if self.max_distance is not None:
             distance = self.pos.distance_to(self.start_pos)
             if distance > self.max_distance:
+                # Explode when max distance reached (for bullets with explosion_radius)
+                if self.explosion_radius > 0 and not self.exploded:
+                    self.explode([], None)
                 return False
         return True
     
 class Weapon:
-    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None):
+    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False):
         self.name = name
         self.bullet_speed =  bullet_speed
         self.ammo = ammo
@@ -77,6 +81,7 @@ class Weapon:
         self.bullet_count = bullet_count
         self.bullet_lifetime = bullet_lifetime
         self.bullet_range = bullet_range if bullet_range is not None else bullet_speed * bullet_lifetime
+        self.bullet_piercing = bullet_piercing
         self.last_shot = 0
 
     def can_shoot(self):
@@ -104,6 +109,7 @@ class Weapon:
                 self.bullet_lifetime,
                 self.damage,
                 max_distance=self.bullet_range,
+                bullet_piercing = self.bullet_piercing,
                 explosion_radius=60 if self.name == "Rockets" else 0,
                 is_homing=(self.name == "Rockets")
             ))
@@ -117,10 +123,11 @@ class MachineGun(Weapon):
             ammo=20,
             rate=100,
             damage=10,
-            bullet_size='md',
+            bullet_size=4,
             spread=7,
             bullet_count=3,
-            bullet_lifetime=90
+            bullet_lifetime=90,
+            bullet_piercing=False
         )
     
 class Shotgun(Weapon):
@@ -130,11 +137,12 @@ class Shotgun(Weapon):
             bullet_speed=30,
             ammo=10,
             rate=800,
-            damage=40,
-            bullet_size='sm',
+            damage=30,
+            bullet_size=6,
             spread=50,
             bullet_count=8,
-            bullet_lifetime=17
+            bullet_lifetime=17,
+            bullet_piercing=False
         )
 
 class RailGun(Weapon):
@@ -145,10 +153,11 @@ class RailGun(Weapon):
             ammo=5,
             rate=700,
             damage=50,
-            bullet_size='lg',
+            bullet_size=8,
             spread=0,
             bullet_count=1,
-            bullet_lifetime=100
+            bullet_lifetime=100,
+            bullet_piercing=False
         )
 
 class Rockets(Weapon):
@@ -159,10 +168,11 @@ class Rockets(Weapon):
             ammo=3,
             rate=1000,
             damage=200,
-            bullet_size='lg',
+            bullet_size=11,
             spread=25,
             bullet_count=1,
-            bullet_lifetime=100
+            bullet_lifetime=100,
+            bullet_piercing=False
         )
 
 class Weapons:

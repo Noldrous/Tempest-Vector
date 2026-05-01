@@ -18,7 +18,7 @@ class Upgrade:
     def __init__(self, x, y, card_type, title, description, icon):
         self.rect = pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT)
         self.original_y = y
-        self.target_y = y - 50  # Cards pop up
+        self.target_y = (height - CARD_HEIGHT) // 2  # Cards center on screen
         self.current_y = y
         self.start_time = pygame.time.get_ticks()
         self.card_type = card_type
@@ -109,13 +109,16 @@ class Upgrade:
 
     
     def handle_event(self, event, mouse_pos):
+        # Use the actual current_y position for collision detection
+        current_rect = pygame.Rect(self.rect.x, int(200), self.rect.width, self.rect.height)
+
         if event.type == pygame.MOUSEMOTION:
-            self.hovered = self.rect.collidepoint(mouse_pos)
+            self.hovered = current_rect.collidepoint(mouse_pos)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1 and self.rect.collidepoint(mouse_pos):
+            if event.button == 1 and current_rect.collidepoint(mouse_pos):
                 self.selected = True
                 return True
-            if self.rect.collidepoint(mouse_pos):
+            if current_rect.collidepoint(mouse_pos):
                 return True
         return False
 
@@ -123,7 +126,7 @@ class Upgrade:
     def generate_upgrades(screen_width, screen_height, font_small):
         upgrades = [
             ["Weapon", "Shotgun fire rate", "Decrease SG fire rate.", None],
-            ["Weapon", "Piercing Shot", "Bullets pierce through enemies.", None],
+            ["Weapon", "RG Piercing Shot", "Bullets pierce through enemies.", None],
             ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", None],
             ["Passive", "Increased Health", "Boosts your maximum health.", None],
             ["Passive", "Faster Reload", "Faster weapon swapping.", None],
@@ -137,7 +140,8 @@ class Upgrade:
         selected_upgrade = random.sample(upgrades, 3)
         total_width = 3 * CARD_WIDTH + 2 * CARD_SPACING
         start_x = (width - total_width) // 2
-        y = height // 2 - CARD_HEIGHT // 2
+        # Center cards vertically on screen
+        y = (height - CARD_HEIGHT) // 2 - 300
 
         return [Upgrade(start_x + i * (CARD_WIDTH + CARD_SPACING), y, *data) for i, data in enumerate(selected_upgrade)]
     
@@ -192,13 +196,15 @@ class Upgrade:
                     if weapon.rate < 200:
                         weapon.rate = 200
                     print(f"Shotgun spread increased to {weapon.spread}")
-                    
-        elif upgrade_title == "Piercing Shot":
-            # All weapons get damage boost
+
+        elif upgrade_title == "RG Piercing Shot":
+            # All weapons get damage boost and pierce
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
-                if weapon is not None:
-                    weapon.damage = int(weapon.damage * 1.25)
+                if weapon.name == "Rail Gun":
+                    if weapon is not None:
+                        weapon.bullet_piercing = True
+                        weapon.damage = int(weapon.damage * 1.25)
 
         elif upgrade_title == "Ammo Cache":
             weapons.max_ammo_bonus += 5
