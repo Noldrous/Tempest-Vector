@@ -123,7 +123,7 @@ class Upgrade:
     def generate_upgrades(screen_width, screen_height, font_small):
         upgrades = [
             ["Weapon", "Shotgun fire rate", "Decrease SG fire rate.", None],
-            ["Weapon", "RG Piercing Shot", "Bullets pierce through enemies.", None],
+            ["Weapon", "Railgun Piercing Shot", "Bullets pierce through enemies.", None],
             ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", None],
             ["Passive", "Increased Health", "Boosts your maximum health.", None],
             ["Passive", "Faster Reload", "Faster weapon swapping.", None],
@@ -193,8 +193,8 @@ class Upgrade:
                         weapon.rate = 200
                     print(f"Shotgun spread increased to {weapon.spread}")
 
-        elif upgrade_title == "RG Piercing Shot":
-            # All weapons get damage boost and pierce
+        elif upgrade_title == "Railgun Piercing Shot":
+            # Railgun gets damage boost and pierce
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon.name == "Rail Gun":
