@@ -1,7 +1,6 @@
 from settings import *
 import random
 
-
 class Bullet:
     def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, explosion_radius=0, is_homing=False, seek_range=1000):
         self.pos = pygame.Vector2(x, y)
@@ -23,10 +22,11 @@ class Bullet:
             return
             
         # Damage all enemies in explosion radius
-        for enemy in all_enemies[:]:
-            distance = enemy.pos.distance_to(self.pos)
-            if distance < self.explosion_radius:
-                enemy.take_damage(self.damage // 2)
+        if all_enemies:
+            for enemy in all_enemies[:]:
+                distance = enemy.pos.distance_to(self.pos)
+                if distance < self.explosion_radius:
+                    enemy.take_damage(self.damage // 2)
         
         # Visual explosion effect
         for _ in range(20):
@@ -54,18 +54,18 @@ class Bullet:
         pygame.draw.circle(screen, (255,255,255), (int(self.pos.x), int(self.pos.y)), self.radius)
         pygame.draw.circle(screen, (100,100,100), (int(self.pos.x), int(self.pos.y)), self.radius, 2)
 
-    def is_alive(self):
+    def is_alive(self, all_enemies=None, player_bullets=None):
         if self.lifetime <= 0:
             # Explode when lifetime expires (for bullets with explosion_radius)
             if self.explosion_radius > 0 and not self.exploded:
-                self.explode([], None)
+                self.explode(all_enemies, player_bullets)
             return False
         if self.max_distance is not None:
             distance = self.pos.distance_to(self.start_pos)
             if distance > self.max_distance:
                 # Explode when max distance reached (for bullets with explosion_radius)
                 if self.explosion_radius > 0 and not self.exploded:
-                    self.explode([], None)
+                    self.explode(all_enemies, player_bullets)
                 return False
         return True
     

@@ -4,6 +4,7 @@ from enemy import *
 from weapons import *
 from waves import *
 from upgrades import *
+from particle import *
 
 class Game:
     def __init__(self):
@@ -293,7 +294,7 @@ class Game:
         left_panel_targetx = 0
 
         anim_speed = 20
-        
+
         while True:
             mouse = pygame.mouse.get_pos()
 
@@ -314,7 +315,7 @@ class Game:
                         
             right_panel_x = max(right_panel_targetx, right_panel_x - anim_speed)
             left_panel_x = min(left_panel_targetx, left_panel_x + anim_speed)
-            
+
             try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
             quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
 
@@ -375,6 +376,15 @@ class Game:
             ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
             ui_surface.fill((0, 0, 0, 0))  # clear with transparency
 
+            self.screen.blit(self.background, (0, 0))
+            self.setbackground("shadow1", 2, 0, 360, 720)
+            self.setbackground("shadow2", 1, 0, 360, 720)
+            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
+            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
+            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
+            self.setbackground("star1", 0.8, 0, 360, 720)
+            self.setbackground("star2", 0.5, 0, 360, 720)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -399,15 +409,6 @@ class Game:
                         if event.key == pygame.K_ESCAPE:
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
-
-            self.screen.blit(self.background, (0, 0))
-            self.setbackground("shadow1", 2, 0, 360, 720)
-            self.setbackground("shadow2", 1, 0, 360, 720)
-            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
-            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
-            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
-            self.setbackground("star1", 0.8, 0, 360, 720)
-            self.setbackground("star2", 0.5, 0, 360, 720)
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
@@ -436,7 +437,26 @@ class Game:
                 bullet.update(all_enemies)
                 bullet.draw(self.screen)
 
-            player_bullets = [bullet for bullet in player_bullets if bullet.is_alive()]
+            # Update waves to get all_enemies before checking bullet lifetimes
+            if not show_upgrade_screen:
+                wave_manager.update(dt)
+            
+            all_enemies = wave_manager.all_enemies
+            
+            # Check for exploded bullets (when lifetime expires) and create visual effect
+            alive_bullets = []
+            for bullet in player_bullets:
+                alive = bullet.is_alive(all_enemies, player_bullets)
+                # If bullet just exploded (not alive and has explosion_radius), create visual effect
+                if not alive and bullet.explosion_radius > 0 and not hasattr(bullet, '_visual_created'):
+                    bullet._visual_created = True
+                    explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                    explosion_group.add(explosion)
+                if alive:
+                    alive_bullets.append(bullet)
+            
+            player_bullets = alive_bullets
+
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
             status_text = self.sfont.render(f"{weapon_name} Ammo: {ammo_text}", False, "white")
@@ -447,12 +467,6 @@ class Game:
                 message_text = self.sfont.render("Swapping Weapon...", False, (255, 165, 0))
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
                 ui_surface.blit(message_text, message_rect)
-
-            # Update waves EARLY
-            if not show_upgrade_screen:
-                wave_manager.update(dt)
-            
-            all_enemies = wave_manager.all_enemies
             
             # Check for upgrade trigger with DELAY
             if hasattr(wave_manager, 'upgrades_pending') and wave_manager.upgrades_pending and not show_upgrade_screen:
@@ -500,6 +514,8 @@ class Game:
                         if bullet in player_bullets:
                             if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
                                 bullet.explode(all_enemies, player_bullets)
+                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                                explosion_group.add(explosion)
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
                         break
@@ -531,7 +547,11 @@ class Game:
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
 
-# UPGRADE SCREEN - draw after wave clear
+            # Update and draw explosions
+            explosion_group.update()
+            explosion_group.draw(self.screen)
+
+            # UPGRADE SCREEN
             if show_upgrade_screen:
                 # Fade transition
                 upgrade_fade_alpha = min(255, upgrade_fade_alpha + 8)  # Fade in
@@ -544,7 +564,7 @@ class Game:
                 # Fade title
                 title_surface = self.sfont.render("CHOOSE UPGRADE", True, (255, 255, 255))
                 title_surface.set_alpha(upgrade_fade_alpha)
-                title_rect = title_surface.get_rect(center=(self.width//2, self.height//6))
+                title_rect = title_surface.get_rect(center=(self.width//2, self.height))
                 self.screen.blit(title_surface, title_rect)
 
                 # Update and draw cards (cards have their own pop-up animation)
@@ -563,4 +583,4 @@ class Game:
             pygame.display.update()
 
 if __name__ == "__main__":
-    Game().game()
+    Game().start_menu()
