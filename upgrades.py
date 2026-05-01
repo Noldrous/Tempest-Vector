@@ -4,8 +4,8 @@ from weapons import *
 from player import *
 import weapons
 
-CARD_WIDTH = 400
-CARD_HEIGHT = 600
+CARD_WIDTH = width // 4
+CARD_HEIGHT = height // 1.25
 CARD_SPACING = 50
 ANIMATION_DURATION = 1000
 
@@ -19,7 +19,6 @@ class Upgrade:
         self.rect = pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT)
         self.original_y = y
         self.target_y = y - 50  # Cards pop up
-        self.current_y = y
         self.start_time = pygame.time.get_ticks()
         self.card_type = card_type
         self.title = title
@@ -34,16 +33,16 @@ class Upgrade:
         current_time = pygame.time.get_ticks()
         elapsed = current_time - self.start_time
 
-        #POP UP ANIMATION
         if elapsed < ANIMATION_DURATION:
-            self.animation_progress = elapsed / ANIMATION_DURATION
-            # Ease out effect
-            ease_out = 1 - (1 - self.animation_progress) ** 3
-            self.current_y = self.original_y - (self.original_y - self.target_y) * ease_out
-        else:
-            self.current_y = self.target_y
+            t = elapsed / ANIMATION_DURATION
+            ease_out = 1 - (1 - t) ** 3
 
-        #scale effect on hover
+            # animate from original_y → target_y
+            new_y = self.original_y - (self.original_y - self.target_y) * ease_out
+            self.rect.y = int(new_y)
+        else:
+            self.rect.y = self.target_y
+
         self.scale = 1.1 if self.hovered else 1.0
 
     def draw(self, screen, font_large, font_small):
@@ -104,10 +103,9 @@ class Upgrade:
         scaled_surf = pygame.transform.scale(card_surf, 
                                         (int(CARD_WIDTH * self.scale), 
                                             int(CARD_HEIGHT * self.scale)))
-        scaled_rect = scaled_surf.get_rect(center=(self.rect.centerx, int(self.current_y)))
+        scaled_rect = scaled_surf.get_rect(center=self.rect.center)
         screen.blit(scaled_surf, scaled_rect)
 
-    
     def handle_event(self, event, mouse_pos):
         if event.type == pygame.MOUSEMOTION:
             self.hovered = self.rect.collidepoint(mouse_pos)
@@ -120,7 +118,7 @@ class Upgrade:
         return False
 
     @staticmethod
-    def generate_upgrades(screen_width, screen_height, font_small):
+    def generate_upgrades():
         upgrades = [
             ["Weapon", "Shotgun fire rate", "Decrease SG fire rate.", None],
             ["Weapon", "Railgun Piercing Shot", "Bullets pierce through enemies.", None],

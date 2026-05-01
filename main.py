@@ -452,7 +452,7 @@ class Game:
                 delay_progress = elapsed_delay / upgrade_delay
                 if delay_progress > 1.0:
                     show_upgrade_screen = True
-                    upgrade_cards = Upgrade.generate_upgrades(self.width, self.height, font_small)
+                    upgrade_cards = Upgrade.generate_upgrades()
                     upgrade_fade_alpha = 0  # Start fade in
                 elif delay_progress > 0.3:  # Show "WAVE CLEARED!" after 30% of delay
                     # WAVE CLEARED message
