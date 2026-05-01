@@ -94,9 +94,9 @@ class Weapon:
         
         self.last_shot = pygame.time.get_ticks()
         self.ammo -= 1
-        return self._create_bullets(x,y,angle)
+        return self.create_bullets(x,y,angle)
     
-    def _create_bullets(self, x, y, angle):
+    def create_bullets(self, x, y, angle):
         bullets = []
         for _ in range(self.bullet_count):
             spread_angle = angle + math.radians(random.uniform(-self.spread / 2, self.spread / 2))
