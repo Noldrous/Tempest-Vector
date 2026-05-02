@@ -19,7 +19,9 @@ upgrade_icon_map = {
     "Health Pack": "icons/heal.png",
     "Shield Regen": "icons/armor-upgrade.png",
     "Reinforced Hull": "icons/ram-profile.png",
-    "Ammo Cache": "icons/ammo-box.png"
+    "Ammo Cache": "icons/ammo-box.png",
+    "Fortified Shield": "icons/bordered-shield.png",
+    "Thruster Optimization": "icons/thruster-upgrade.png",
 
 }
 
@@ -130,16 +132,18 @@ class Upgrade:
     @staticmethod
     def generate_upgrades():
         upgrades = [
-            ["Weapon", "Shotgun fire rate", "Decrease SG fire rate.", load_image_alpha(upgrade_icon_map["Shotgun fire rate"])],#
-            ["Weapon", "Piercing Shot", "RG bullets pierce through enemies.", load_image_alpha(upgrade_icon_map["Piercing Shot"])],#
-            ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", load_image_alpha(upgrade_icon_map["Explosive Shot"])],#
-            ["Passive", "Increased Health", "Boosts your maximum health.", load_image_alpha(upgrade_icon_map["Increased Health"])],#
-            ["Passive", "Faster Reload", "Faster weapon swapping.", load_image_alpha(upgrade_icon_map["Faster Reload"])],#
-            ["Passive", "Damage Boost", "Increases all weapon damage.", load_image_alpha(upgrade_icon_map["Damage Boost"])],#
-            ["Health", "Health Pack", "Restores 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],#
-            ["Health", "Shield Regen", "Decreases time to shield regen.", load_image_alpha(upgrade_icon_map["Shield Regen"])],#
-            ["Ramming", "Reinforced Hull", "Increase RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],#
-            ["Max Ammo", "Ammo Cache", "Increases ammo capacity for all weapons.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]#
+            ["Weapon", "Shotgun fire rate", "Decrease Shotgun fire rate.", load_image_alpha(upgrade_icon_map["Shotgun fire rate"])],
+            ["Weapon", "Railgun Piercing Shot", "Railgun bullets pierce through enemies.", load_image_alpha(upgrade_icon_map["Piercing Shot"])],
+            ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", load_image_alpha(upgrade_icon_map["Explosive Shot"])],
+            ["Passive", "Vitality Boost", "Increases maximum health.", load_image_alpha(upgrade_icon_map["Increased Health"])],
+            ["Passive", "Fortified Shield", "Increases maximum shield.", load_image_alpha(upgrade_icon_map["Fortified Shield"])],
+            ["Passive", "Thruster Optimization", "Increases maximum speed.", load_image_alpha(upgrade_icon_map["Thruster Optimization"])],
+            ["Passive", "Faster Reload", "Faster weapon swapping.", load_image_alpha(upgrade_icon_map["Faster Reload"])],
+            ["Passive", "Damage Boost", "Increases all weapon damage.", load_image_alpha(upgrade_icon_map["Damage Boost"])],
+            ["Health", "Health Pack", "Restores 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],
+            ["Health", "Shield Regen", "Decreases time to shield regen.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
+            ["Ramming", "Reinforced Hull", "Increase RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
+            ["Max Ammo", "Ammo Cache", "Increases ammo capacity for all weapons.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
         ]
 
         selected_upgrade = random.sample(upgrades, 3)
@@ -150,9 +154,17 @@ class Upgrade:
         return [Upgrade(start_x + i * (CARD_WIDTH + CARD_SPACING), y, *data) for i, data in enumerate(selected_upgrade)]
     
     def apply_upgrade(player, weapons, upgrade_title):
-        if upgrade_title == "Increased Health":
+        if upgrade_title == "Vitality Boost":
             player.max_health += 50
             player.health = player.max_health
+
+        elif upgrade_title == "Fortified Shield":
+            player.max_shield += 50
+            player.shield = player.max_shield
+
+        elif upgrade_title == "Thruster Optimization":
+            player.max_speed += 2
+            player.thrust_power += 0.1
             
         elif upgrade_title == "Faster Reload":
             # Apply to current weapon and all queued weapons
@@ -176,9 +188,12 @@ class Upgrade:
                     
         elif upgrade_title == "Shield Regen":
                 player.shield_regeneration += 0.05
+                player.shield_regen_delay -= 15
                 
         elif upgrade_title == "Reinforced Hull":
-                player.ram_damage += 3
+                player.ram_damage *= 1.5
+                player.max_shield += 10
+                player.shield = player.max_shield
                 
         elif upgrade_title == "Explosive Shot":
             # Only affects Rockets - increases explosion radius
@@ -189,6 +204,7 @@ class Upgrade:
                     old_damage = weapon.damage
                     Rockets.__init__(weapon)
                     weapon.damage = old_damage * 1.5
+                    weapon.explosion_radius *= 1.25
                     # Manually set bigger explosion (since init doesn't support it yet)
                     
         elif upgrade_title == "SG fire rate":
