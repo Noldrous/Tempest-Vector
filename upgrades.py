@@ -7,10 +7,20 @@ import weapons
 CARD_WIDTH = width // 4
 CARD_HEIGHT = height // 1.25
 CARD_SPACING = 50
-ANIMATION_DURATION = 1000
+ANIMATION_DURATION = 1500
 
 upgrade_icon_map = {
-    "Ammo Cache": "icons/PSXAmmoBoxes/PSXAmmoBoxes/#Images/Large_Ammo_Box.png"
+    "Shotgun fire rate": "icons/sawed-off-shotgun.png",
+    "Piercing Shot": "icons/piercing_shot.png",
+    "Explosive Shot": "icons/explosion.png",
+    "Increased Health": "icons/health_increase.png",
+    "Faster Reload": "icons/reload.png",
+    "Damage Boost": "icons/damage_upgrade.png",
+    "Health Pack": "icons/heal.png",
+    "Shield Regen": "icons/armor-upgrade.png",
+    "Reinforced Hull": "icons/ram-profile.png",
+    "Ammo Cache": "icons/ammo-box.png"
+
 }
 
 
@@ -120,17 +130,18 @@ class Upgrade:
     @staticmethod
     def generate_upgrades():
         upgrades = [
-            ["Weapon", "Shotgun fire rate", "Decrease SG fire rate.", None],
-            ["Weapon", "Railgun Piercing Shot", "Bullets pierce through enemies.", None],
-            ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", None],
-            ["Passive", "Vitality Boost", "Increases maximum health.", None],
+            ["Weapon", "Shotgun fire rate", "Decrease Shotgun fire rate.", load_image_alpha(upgrade_icon_map["Shotgun fire rate"])],#
+            ["Weapon", "Railgun Piercing Shot", "Railgun bullets pierce through enemies.", load_image_alpha(upgrade_icon_map["Piercing Shot"])],#
+            ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", load_image_alpha(upgrade_icon_map["Explosive Shot"])],#
+            ["Passive", "Vitality Boost", "Increases maximum health.", load_image_alpha(upgrade_icon_map["Increased Health"])],#
             ["Passive", "Fortified Shield", "Increases maximum shield.", None],
             ["Passive", "Thruster Optimization", "Increases maximum speed.", None],
-            ["Passive", "Faster Reload", "Faster weapon swapping.", None],
-            ["Passive", "Damage Boost", "Increases all weapon damage.", None],
-            ["Health", "Shield Regen", "Decreases time to shield regen.", None],
-            ["Ramming", "Reinforced Hull", "Increase RAMMING damage.", None],
-            ["Max Ammo", "Ammo Cache", "Increases ammo capacity for all weapons.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
+            ["Passive", "Faster Reload", "Faster weapon swapping.", load_image_alpha(upgrade_icon_map["Faster Reload"])],#
+            ["Passive", "Damage Boost", "Increases all weapon damage.", load_image_alpha(upgrade_icon_map["Damage Boost"])],#
+            ["Health", "Health Pack", "Restores 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],#
+            ["Health", "Shield Regen", "Decreases time to shield regen.", load_image_alpha(upgrade_icon_map["Shield Regen"])],#
+            ["Ramming", "Reinforced Hull", "Increase RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],#
+            ["Max Ammo", "Ammo Cache", "Increases ammo capacity for all weapons.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]#
         ]
 
         selected_upgrade = random.sample(upgrades, 3)
@@ -167,9 +178,14 @@ class Upgrade:
             for weapon in all_weapons:
                 if weapon is not None:
                     weapon.damage = int(weapon.damage * 1.5)
+                        
+        elif upgrade_title == "Health Pack":
+                player.health += 100
+                if player.health > player.max_health:
+                    player.health = player.max_health
                     
         elif upgrade_title == "Shield Regen":
-                player.shield_regeneration += 0.1
+                player.shield_regeneration += 0.05
                 player.shield_regen_delay -= 15
                 
         elif upgrade_title == "Reinforced Hull":
@@ -195,8 +211,8 @@ class Upgrade:
             for weapon in all_weapons:
                 if weapon.name == "Shotgun":
                     weapon.rate += -100
-                    if weapon.rate < 200:
-                        weapon.rate = 200
+                    if weapon.rate < 100:
+                        weapon.rate = 100
                     print(f"Shotgun spread increased to {weapon.spread}")
 
         elif upgrade_title == "Railgun Piercing Shot":

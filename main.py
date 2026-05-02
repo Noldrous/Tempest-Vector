@@ -363,6 +363,7 @@ class Game:
         player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
+        load_bullet_sheets()
 
         # HEALTH BAR
         hpBar_x = 50
@@ -438,8 +439,6 @@ class Game:
             self.setbackground("star1", 0.8, 0, 360, 720)
             self.setbackground("star2", 0.5, 0, 360, 720)
 
-            
-
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
                 player.entrance()
@@ -490,7 +489,8 @@ class Game:
 
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
-            status_text = self.sfont.render(f"{weapon_name} Ammo: {ammo_text}", False, "white")
+            current_wave = wave_manager.current_wave
+            status_text = self.sfont.render(f"Wave: {current_wave} | {weapon_name} Ammo: {ammo_text}", False, "white")
             ui_surface.blit(status_text, (20, 20))
 
             # Display "changing weapon" message if cycling
