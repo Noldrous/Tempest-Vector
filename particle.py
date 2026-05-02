@@ -19,8 +19,8 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y, size=100):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
-        for i in range(1, 12):
-            image = pygame.image.load(f"assets/img/bullets/explosion/explosion{i}.png").convert_alpha()
+        for i in range(1, 8):
+            image = pygame.image.load(f"assets/img/bullets/explosion/explosion-f{i}.png").convert_alpha()
             image = pygame.transform.scale(image, (size, size))
             self.images.append(image)
         self.index = 0

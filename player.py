@@ -1,6 +1,7 @@
 from settings import *
 from particle import Particle
 from spritesheet import *
+import time
 
 class Player:
     def __init__(self, image):
@@ -8,7 +9,7 @@ class Player:
         self.ship_radius = 16
 
         self.health = 200
-        self.max_health = 200
+        self.max_health = 300
 
         self.shield = 100
         self.shield_regeneration = 1
@@ -118,7 +119,57 @@ class Player:
         for p in self.particles:
             p.draw(screen)
 
+        # Draw glow effect behind the player
+        #self.draw_glow(screen)
+
         screen.blit(rotated, rect.topleft)
+    
+    def draw_glow(self, screen):
+        """Draw a pulsing glow indicator around the player"""
+        # Create pulsing animation using current time
+        pulse = (math.sin(time.time() * 3) + 1) / 2  # Oscillates between 0 and 1
+        
+        # Outer glow ring - larger, more transparent
+        glow_radius = int(self.ship_radius * 2.5 + pulse * 8)
+        glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
+        
+        # Draw outer glow with gradient effect
+        for i in range(3):
+            alpha = int(30 + pulse * 20)
+            radius = glow_radius - i * 5
+            if radius > 0:
+                pygame.draw.circle(glow_surface, (0, 200, 255, alpha), (glow_radius, glow_radius), radius, 2)
+        
+        # Inner glow - brighter, follows shield state
+        if self.shield > 0:
+            inner_color = (0, 255, 255, 150 + int(pulse * 50))  # Cyan for shield
+        else:
+            inner_color = (255, 100, 50, 100 + int(pulse * 50))  # Orange when no shield
+        
+        # Draw inner glow circle
+        inner_radius = int(self.ship_radius * 1.5 + pulse * 4)
+        pygame.draw.circle(glow_surface, inner_color, (glow_radius, glow_radius), inner_radius, 2)
+        
+        # Position the glow surface centered on player
+        glow_rect = glow_surface.get_rect(center=(int(self.ship_pos.x), int(self.ship_pos.y)))
+        
+        # Blit with blend for additive glow effect
+        screen.blit(glow_surface, glow_rect.topleft, special_flags=pygame.BLEND_ADD)
+        
+        # Draw direction indicator (line pointing where player is facing)
+        indicator_length = int(self.ship_radius * 2 + pulse * 3)
+        end_pos = (
+            self.ship_pos.x + math.cos(self.angle) * indicator_length,
+            self.ship_pos.y + math.sin(self.angle) * indicator_length
+        )
+        
+        if self.shield > 0:
+            indicator_color = (0, 255, 255)
+        else:
+            indicator_color = (255, 150, 50)
+        
+        # Main direction line
+        pygame.draw.line(screen, indicator_color, self.ship_pos, end_pos, 2)
     
     def move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -222,9 +273,9 @@ class Player:
 
                 recoil_strength = {
                     "Machine Gun": 1,
-                    "Shotgun": 5,
-                    "Rail Gun": 6,
-                    "Rockets": 8
+                    "Shotgun": 4,
+                    "Rail Gun": 5,
+                    "Rockets": 6
                 }
 
                 self.apply_recoil(self.angle, recoil_strength.get(weapon.name, 3))
@@ -238,7 +289,7 @@ class Player:
             # rotate ship toward center
             self.angle = math.atan2(direction.y, direction.x)
 
-            self.ship_pos += direction * 0.05
+            self.ship_pos += direction * 0.09
 
             if direction.length() < 5:
                 self.entering = False

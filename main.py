@@ -13,7 +13,8 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Tempest Vector")
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font("assets/font/black-and-white.ttf", 20)
+        self.sfont = pygame.font.Font("assets/font/black-and-white.ttf", 20)
+        self.mfont = pygame.font.Font("assets/font/black-and-white.ttf", 35)
         self.running = True
         
         self.assets = {
@@ -32,6 +33,12 @@ class Game:
             "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
             "quit_button1": load_image_alpha('ui/exit_button.png'),
             "quit_button2": load_image_alpha('ui/sad.png'),
+            "resume_button1": load_image_alpha('ui/resume1.png'),
+            "resume_button2": load_image_alpha('ui/resume2.png'),
+            "restart_button1": load_image_alpha('ui/restart1.png'),
+            "restart_button2": load_image_alpha('ui/restart2.png'),
+            "quit1": load_image_alpha('ui/quit1.png'),
+            "quit2": load_image_alpha('ui/quit2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
             "seeker": load_image_alpha('enemies/seeker.png'),
         }
@@ -198,39 +205,96 @@ class Game:
 
             pygame.display.update()
             
-    def pause_menu(self):
+    def pause_menu(self, background):
+        panel_width = 300
+        panel_x = self.width
+        target_x = self.width - panel_width
+
+        overlay_alpha = 0
+
+        anim_speed = 20
+        fade_speed = 15
+
+        resume1 = pygame.transform.scale(self.assets["resume_button1"], (200, 60))
+        resume2 = pygame.transform.scale(self.assets["resume_button2"], (200, 60))
+        restart1 = pygame.transform.scale(self.assets["restart_button1"], (200, 60))
+        restart2 = pygame.transform.scale(self.assets["restart_button2"], (200, 60))
+        quit1 = pygame.transform.scale(self.assets["quit1"], (200, 60))
+        quit2 = pygame.transform.scale(self.assets["quit2"], (200, 60))
+
+        resume = False
+
         while True:
             mouse = pygame.mouse.get_pos()
-            for event in pygame.event.get():
 
+            for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_buttons = pygame.mouse.get_pressed()
-                    if resume_button.collidepoint(mouse) and mouse_buttons[0]:
-                        return
-
-                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if resume_rect.collidepoint(mouse):
+                        resume = True
+                    if restart_rect.collidepoint(mouse):
+                        self.game()
+                    if quit_rect.collidepoint(mouse):
                         pygame.quit()
                         sys.exit()
 
-            resume_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
-            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+            if not resume:
+                panel_x = max(target_x, panel_x - anim_speed)
+                overlay_alpha = min(180, overlay_alpha + fade_speed)
+            else:
+                panel_x = min(self.width, panel_x + anim_speed)
+                overlay_alpha = max(0, overlay_alpha - fade_speed)
 
-            pygame.draw.rect(self.screen, "skyblue" if resume_button.collidepoint(mouse) else "darkgray", resume_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+                if panel_x >= self.width and overlay_alpha <= 0:
+                    return
 
-            play_text = self.font.render("Resume", False, "white")
-            quit_text = self.font.render("Quit", False, "white")
+            # -------- Draw --------
+            self.screen.blit(background, (0, 0))
 
-            self.screen.blit(play_text, (width//2 - 50, height - 500))
-            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+            overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, overlay_alpha))
+            self.screen.blit(overlay, (0, 0))
+
+            panel_rect = pygame.Rect(panel_x, 0, panel_width, self.height)
+            pygame.draw.rect(self.screen, (20, 20, 20), panel_rect)
+            
+            pygame.draw.rect(self.screen, "darkgray", (panel_x, 0, 300, 100), 35) 
+            pygame.draw.rect(self.screen, "darkgray", (panel_x + 10, 0, 60, 100)) 
+            pygame.draw.rect(self.screen, "darkgray", (panel_x + 230, 0, 60, 100))
+            pygame.draw.rect(self.screen, (255, 255, 255), (panel_x, 0, 300, 100), 5) 
+            pygame.draw.rect(self.screen, (255, 255, 255), panel_rect, 5)
+
+            resume_rect = pygame.Rect(panel_x + 50, 200, 200, 60)
+            restart_rect = pygame.Rect(panel_x + 50, 300, 200, 60)
+            quit_rect = pygame.Rect(panel_x + 50, 400, 200, 60)
+
+            
+            resume_button = resume2 if resume_rect.collidepoint(mouse) else resume1
+            restart_button = restart2 if restart_rect.collidepoint(mouse) else restart1
+            quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
+
+            paused_text = self.mfont.render("Paused", True, "darkgray")
+
+            self.screen.blit(paused_text, (panel_x + 70, 35))
+            self.screen.blit(resume_button, resume_rect)
+            self.screen.blit(restart_button, restart_rect)
+            self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
+            self.clock.tick(60)
 
     def game_over(self):
+        panel_width = self.width
+        right_panel_x = self.width
+        right_panel_targetx = 0
+        left_panel_x = -self.width
+        left_panel_targetx = 0
+
+        anim_speed = 20
+
         while True:
             mouse = pygame.mouse.get_pos()
 
@@ -248,6 +312,9 @@ class Game:
                     if quit_button.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
+                        
+            right_panel_x = max(right_panel_targetx, right_panel_x - anim_speed)
+            left_panel_x = min(left_panel_targetx, left_panel_x + anim_speed)
 
             try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
             quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
@@ -255,8 +322,8 @@ class Game:
             pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
             pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
 
-            try_again_text = self.font.render("Try Again", False, "white")
-            quit_text = self.font.render("Quit", False, "white")
+            try_again_text = self.sfont.render("Try Again", False, "white")
+            quit_text = self.sfont.render("Quit", False, "white")
 
             self.screen.blit(try_again_text, (width//2 - 50, height - 500))
             self.screen.blit(quit_text, (width//2 - 50, height - 400))
@@ -268,6 +335,7 @@ class Game:
         player_bullets = []
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
+        load_bullet_sheets()
 
         # HEALTH BAR
         hpBar_x = 50
@@ -294,17 +362,20 @@ class Game:
         upgrade_trigger_time = 0
         upgrade_fade_alpha = 0
         upgrade_cards = []
-        upgrade_delay = 2.0  # 1 second delay before upgrade cards
+        upgrade_delay = 1.0  # 1 second delay before upgrade cards
         game_time = 0.0
-        
-# WEAPONS SPRITES
-     
 
+        ui_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        ui_alpha = 0
+        ui_fade_speed = 300
 
         while True:
             dt = self.clock.tick(60) / 1000.0
             game_time += dt
             mouse = pygame.mouse.get_pos()
+
+            ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
+            ui_surface.fill((0, 0, 0, 0))  # clear with transparency
 
             self.screen.blit(self.background, (0, 0))
             self.setbackground("shadow1", 2, 0, 360, 720)
@@ -314,13 +385,8 @@ class Game:
             self.setbackground("celestial3", 0.3, 500, self.height, self.height)
             self.setbackground("star1", 0.8, 0, 360, 720)
             self.setbackground("star2", 0.5, 0, 360, 720)
-            
-            #pause_button -------------------------------------------------------------------------------------------------------------------------------------------------------
-            pause_button = pygame.Rect(width - 50, 25, 25, 50)
-            pygame.draw.rect(self.screen, "skyblue" if pause_button.collidepoint(mouse) else "darkgray", pause_button)
 
             for event in pygame.event.get():
-
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -340,13 +406,10 @@ class Game:
                             wave_manager.setup_wave()  # Start next wave
                             break
                 else:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        mouse_buttons = pygame.mouse.get_pressed()
-                        if pause_button.collidepoint(mouse) and mouse_buttons[0]:
-                            self.pause_menu()
-            
-
-
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            pause_bg = self.screen.copy()
+                            self.pause_menu(pause_bg)
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
@@ -359,8 +422,8 @@ class Game:
             if player.health <= 0:
                 self.game_over()
 
-            health_bar.draw(self.screen, player.health)
-            shield_bar.draw(self.screen, player.shield)
+            health_bar.draw(ui_surface, player.health)
+            shield_bar.draw(ui_surface, player.shield)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             firing = pygame.mouse.get_pressed()[0]
@@ -373,7 +436,7 @@ class Game:
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)
-                bullet.draw(self.screen)
+                bullet.draw(self.screen,)
 
             # Update waves to get all_enemies before checking bullet lifetimes
             if not show_upgrade_screen:
@@ -397,16 +460,17 @@ class Game:
 
             weapon_name = player.weapon.name if player.weapon else "No Weapon"
             ammo_text = player.weapon.ammo if player.weapon else 0
-            status_text = self.font.render(f"{weapon_name} Ammo: {ammo_text}", False, "white")
-            self.screen.blit(status_text, (20, 20))
+            current_wave = wave_manager.current_wave
+            status_text = self.sfont.render(f"Wave: {current_wave} | {weapon_name} Ammo: {ammo_text}", False, "white")
+            ui_surface.blit(status_text, (20, 20))
 
             # Display "changing weapon" message if cycling
             if weapons.should_show_message():
-                message_text = self.font.render("Swapping Weapon...", False, (255, 165, 0))
+                message_text = self.sfont.render("Swapping Weapon...", False, (255, 165, 0))
                 message_rect = message_text.get_rect(center=(self.width // 2, self.height // 2))
-                self.screen.blit(message_text, message_rect)
+                ui_surface.blit(message_text, message_rect)
             
-# Check for upgrade trigger with DELAY
+            # Check for upgrade trigger with DELAY
             if hasattr(wave_manager, 'upgrades_pending') and wave_manager.upgrades_pending and not show_upgrade_screen:
                 if upgrade_trigger_time == 0:
                     upgrade_trigger_time = game_time  # Start delay timer
@@ -415,11 +479,11 @@ class Game:
                 delay_progress = elapsed_delay / upgrade_delay
                 if delay_progress > 1.0:
                     show_upgrade_screen = True
-                    upgrade_cards = Upgrade.generate_upgrades(self.width, self.height, font_small)
+                    upgrade_cards = Upgrade.generate_upgrades()
                     upgrade_fade_alpha = 0  # Start fade in
                 elif delay_progress > 0.3:  # Show "WAVE CLEARED!" after 30% of delay
                     # WAVE CLEARED message
-                    clear_msg = self.font.render("WAVE CLEARED!", True, (255, 255, 0))
+                    clear_msg = self.sfont.render("WAVE CLEARED!", True, (255, 255, 0))
                     clear_msg.set_alpha(int(255 * (delay_progress - 0.5) / 0.9))
                     clear_rect = clear_msg.get_rect(center=(self.width // 2, self.height // 3))
                     self.screen.blit(clear_msg, clear_rect)
@@ -489,23 +553,22 @@ class Game:
             explosion_group.update()
             explosion_group.draw(self.screen)
 
-
             # UPGRADE SCREEN
             if show_upgrade_screen:
                 # Fade transition
                 upgrade_fade_alpha = min(255, upgrade_fade_alpha + 8)  # Fade in
-                
+
                 # Dark overlay with fade
                 overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
                 overlay.fill((0, 0, 0, int(180 * (upgrade_fade_alpha / 255))))
                 self.screen.blit(overlay, (0, 0))
-                
+
                 # Fade title
-                title_surface = self.font.render("CHOOSE UPGRADE", True, (255, 255, 255))
+                title_surface = self.sfont.render("CHOOSE UPGRADE", True, (255, 255, 255))
                 title_surface.set_alpha(upgrade_fade_alpha)
                 title_rect = title_surface.get_rect(center=(self.width//2, self.height))
                 self.screen.blit(title_surface, title_rect)
-                
+
                 # Update and draw cards (cards have their own pop-up animation)
                 for card in upgrade_cards:
                     card.update()
@@ -513,10 +576,12 @@ class Game:
                     if hasattr(card_surf, 'set_alpha'):
                         card_surf.set_alpha(upgrade_fade_alpha)
             if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
-                wave_msg_surface = self.font.render(wave_message, True, (255, 255, 0))
+                wave_msg_surface = self.sfont.render(wave_message, True, (255, 255, 0))
                 wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
 
+            ui_surface.set_alpha(ui_alpha)
+            self.screen.blit(ui_surface, (0, 0))
             pygame.display.update()
 
 if __name__ == "__main__":
