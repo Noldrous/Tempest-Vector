@@ -15,6 +15,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.sfont = pygame.font.Font("assets/font/black-and-white.ttf", 20)
         self.mfont = pygame.font.Font("assets/font/black-and-white.ttf", 35)
+        self.lfont = pygame.font.Font("assets/font/VCR.ttf", 80)
         self.running = True
         
         self.assets = {
@@ -39,8 +40,13 @@ class Game:
             "restart_button2": load_image_alpha('ui/restart2.png'),
             "quit1": load_image_alpha('ui/quit1.png'),
             "quit2": load_image_alpha('ui/quit2.png'),
+            "over_restart1": load_image_alpha('ui/over_restart1.png'),
+            "over_restart2": load_image_alpha('ui/over_restart2.png'),
+            "over_quit1": load_image_alpha('ui/over_quit1.png'),
+            "over_quit2": load_image_alpha('ui/over_quit2.png'),
+            "skull1": load_image_alpha('ui/skull1.png'),
+            "skull2": load_image_alpha('ui/skull2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
-            "seeker": load_image_alpha('enemies/seeker.png'),
         }
 
         self.bg_positions = {
@@ -184,7 +190,7 @@ class Game:
                 ship_particles.append(Particle(pos, vel))
             for particle in ship_particles:
                 particle.update()
-            ship_particles = [p for p in ship_particles if p.life > 0]
+            ship_particles[:] = [p for p in ship_particles if p.life > 0]
             for particle in ship_particles:
                 particle.draw(self.screen)
             
@@ -226,6 +232,9 @@ class Game:
 
         while True:
             mouse = pygame.mouse.get_pos()
+            resume_rect = pygame.Rect(panel_x + 50, 200, 200, 60)
+            restart_rect = pygame.Rect(panel_x + 50, 300, 200, 60)
+            quit_rect = pygame.Rect(panel_x + 50, 400, 200, 60)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -267,11 +276,6 @@ class Game:
             pygame.draw.rect(self.screen, (255, 255, 255), (panel_x, 0, 300, 100), 5) 
             pygame.draw.rect(self.screen, (255, 255, 255), panel_rect, 5)
 
-            resume_rect = pygame.Rect(panel_x + 50, 200, 200, 60)
-            restart_rect = pygame.Rect(panel_x + 50, 300, 200, 60)
-            quit_rect = pygame.Rect(panel_x + 50, 400, 200, 60)
-
-            
             resume_button = resume2 if resume_rect.collidepoint(mouse) else resume1
             restart_button = restart2 if restart_rect.collidepoint(mouse) else restart1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
@@ -286,14 +290,30 @@ class Game:
             pygame.display.update()
             self.clock.tick(60)
 
-    def game_over(self):
+    def game_over(self, background):
         panel_width = self.width
+        panel_height = self.height // 4
         right_panel_x = self.width
         right_panel_targetx = 0
         left_panel_x = -self.width
         left_panel_targetx = 0
 
         anim_speed = 20
+
+        restart1 = pygame.transform.scale(self.assets["over_restart1"], (200, 60))
+        restart2 = pygame.transform.scale(self.assets["over_restart2"], (200, 60))
+        quit1 = pygame.transform.scale(self.assets["over_quit1"], (200, 60))
+        quit2 = pygame.transform.scale(self.assets["over_quit2"], (200, 60))
+        skull1 = pygame.transform.scale(self.assets["skull1"], (350,350))
+        skull2 = pygame.transform.scale(self.assets["skull2"], (350,350))
+        game_over_text = self.lfont.render("[-_-] YOU ARE DEAD [-_-]", False, "darkgray")
+
+        text_rect = game_over_text.get_rect(center=(self.width//2, 60))
+        restart_rect = restart1.get_rect(center=(self.width//2, self.height - 180))
+        quit_rect = quit1.get_rect(center=(self.width//2, self.height - 100))
+        skull_rect = skull1.get_rect(center=(self.width//2, self.height//2 - 75))
+
+        timer = 0
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -306,27 +326,35 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
-                    if try_again_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if restart_rect.collidepoint(mouse) and mouse_buttons[0]:
                         self.game()
 
-                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
+
+            self.screen.blit(background, (0, 0))
                         
             right_panel_x = max(right_panel_targetx, right_panel_x - anim_speed)
             left_panel_x = min(left_panel_targetx, left_panel_x + anim_speed)
 
-            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
-            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+            pygame.draw.rect(self.screen, (0, 0, 0), (right_panel_x, 0, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (right_panel_x, panel_height*2, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (left_panel_x, panel_height, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (left_panel_x, panel_height*3, panel_width, panel_height))
 
-            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+            restart_button = restart2 if restart_rect.collidepoint(mouse) else restart1
+            quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
 
-            try_again_text = self.sfont.render("Try Again", False, "white")
-            quit_text = self.sfont.render("Quit", False, "white")
+            timer += 1
+            skull = skull1 if timer < 75 else skull2
+            if timer > 150:
+                timer=0
 
-            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
-            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+            self.screen.blit(game_over_text, text_rect)
+            self.screen.blit(restart_button, restart_rect)
+            self.screen.blit(quit_button, quit_rect)
+            self.screen.blit(skull, skull_rect)
 
             pygame.display.update()
 
@@ -419,7 +447,8 @@ class Game:
             player.draw(self.screen)
 
             if player.health <= 0:
-                self.game_over()
+                game_over_bg = self.screen.copy()
+                self.game_over(game_over_bg)
 
             health_bar.draw(ui_surface, player.health)
             shield_bar.draw(ui_surface, player.shield)
