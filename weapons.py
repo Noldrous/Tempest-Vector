@@ -70,7 +70,7 @@ class Bullet:
         return True
     
 class Weapon:
-    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False):
+    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False, explosion_radius=0):
         self.name = name
         self.bullet_speed =  bullet_speed
         self.ammo = ammo
@@ -82,6 +82,7 @@ class Weapon:
         self.bullet_lifetime = bullet_lifetime
         self.bullet_range = bullet_range if bullet_range is not None else bullet_speed * bullet_lifetime
         self.bullet_piercing = bullet_piercing
+        self.explosion_radius = explosion_radius
         self.last_shot = 0
 
     def can_shoot(self):
@@ -110,7 +111,7 @@ class Weapon:
                 self.damage,
                 max_distance=self.bullet_range,
                 bullet_piercing = self.bullet_piercing,
-                explosion_radius=60 if self.name == "Rockets" else 0,
+                explosion_radius=self.explosion_radius,
                 is_homing=(self.name == "Rockets")
             ))
         return bullets
@@ -127,7 +128,6 @@ class MachineGun(Weapon):
             spread=7,
             bullet_count=3,
             bullet_lifetime=90,
-            bullet_piercing=False
         )
     
 class Shotgun(Weapon):
@@ -142,7 +142,7 @@ class Shotgun(Weapon):
             spread=50,
             bullet_count=8,
             bullet_lifetime=17,
-            bullet_piercing=False
+            explosion_radius=0,
         )
 
 class RailGun(Weapon):
@@ -152,8 +152,8 @@ class RailGun(Weapon):
             bullet_speed=100,
             ammo=5,
             rate=700,
-            damage=50,
-            bullet_size=8,
+            damage=75,
+            bullet_size=12,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
@@ -168,11 +168,11 @@ class Rockets(Weapon):
             ammo=3,
             rate=1000,
             damage=200,
-            bullet_size=11,
+            bullet_size=15,
             spread=25,
             bullet_count=1,
             bullet_lifetime=100,
-            bullet_piercing=False
+            explosion_radius=75
         )
 
 class Weapons:

@@ -16,17 +16,20 @@ class Particle:
             pygame.draw.rect(screen, (255, 150, 50), (int(self.pos.x)+2, int(self.pos.y)+2, 4, 4))
 
 class Explosion(pygame.sprite.Sprite):
-    def __init__(self, x, y, size=100):
+    def __init__(self, x, y, radius):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
+
+        size = int(radius * 2)  # convert radius → diameter
+
         for i in range(1, 8):
             image = pygame.image.load(f"assets/img/bullets/explosion/explosion-f{i}.png").convert_alpha()
             image = pygame.transform.scale(image, (size, size))
             self.images.append(image)
+
         self.index = 0
         self.image = self.images[self.index]
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+        self.rect = self.image.get_rect(center=(x, y))
         self.counter = 0
 
     def update(self):

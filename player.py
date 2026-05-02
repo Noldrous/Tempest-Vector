@@ -16,14 +16,14 @@ class Player:
         self.shield_regen_delay = 240
         self.last_damage_timer = 0
 
-        self.ram_damage = 2
-        self.thrust_power = 0.25
-        self.max_speed = 12
+        self.ram_damage = 4
+        self.thrust_power = 0.2
+        self.max_speed = 9
 
         self.velocity = pygame.Vector2(0, 0)
-        self.friction = 0.98
+        self.friction = 0.99
         self.angle = 0
-        self.turn_speed = 0.09 
+        self.turn_speed = 0.09
         self.angular_velocity = 0
 
         self.entering = True
@@ -244,30 +244,28 @@ class Player:
                 self.entering = False
 
 class HealthBar:
-    def __init__(self, x, y, w, h, max_health):
+    def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
-        self.max_health = max_health
 
-    def draw(self, screen, current_health):
-        health_ratio = current_health / self.max_health
+    def draw(self, screen, current_health, max_health):
+        health_ratio = current_health / max_health
         current_height = self.h * health_ratio
         pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.w, self.h))
         pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y + (self.h - current_height), self.w, current_height))
         pygame.draw.rect(screen, (120, 0, 0), (self.x, self.y, self.w, self.h), 4)
 
 class ShieldBar:
-    def __init__(self, x, y, w, h, max_shield):
+    def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
-        self.max_shield = max_shield
 
-    def draw(self, screen, current_shield):
-        shield_ratio = current_shield / self.max_shield
+    def draw(self, screen, current_shield, max_shield):
+        shield_ratio = current_shield / max_shield
         current_height = self.h * shield_ratio
         pygame.draw.rect(screen, (0, 0, 255), (self.x, self.y, self.w, self.h))
         pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y + (self.h - current_height), self.w, current_height))

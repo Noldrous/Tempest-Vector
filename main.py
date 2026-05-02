@@ -367,11 +367,11 @@ class Game:
         # HEALTH BAR
         hpBar_x = 50
         hpBar_y = self.height - 550
-        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500, player.health)
+        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500)
         
         shield_bar_x = 75
         shield_bar_y = self.height - 550
-        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500, player.shield)
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500)
 
         # Initialize Wave Manager
         wave_manager = WaveManager()
@@ -401,18 +401,6 @@ class Game:
             game_time += dt
             mouse = pygame.mouse.get_pos()
 
-            ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
-            ui_surface.fill((0, 0, 0, 0))  # clear with transparency
-
-            self.screen.blit(self.background, (0, 0))
-            self.setbackground("shadow1", 2, 0, 360, 720)
-            self.setbackground("shadow2", 1, 0, 360, 720)
-            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
-            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
-            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
-            self.setbackground("star1", 0.8, 0, 360, 720)
-            self.setbackground("star2", 0.5, 0, 360, 720)
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -438,6 +426,20 @@ class Game:
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
 
+            ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
+            ui_surface.fill((0, 0, 0, 0))  # clear with transparency
+
+            self.screen.blit(self.background, (0, 0))
+            self.setbackground("shadow1", 2, 0, 360, 720)
+            self.setbackground("shadow2", 1, 0, 360, 720)
+            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
+            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
+            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
+            self.setbackground("star1", 0.8, 0, 360, 720)
+            self.setbackground("star2", 0.5, 0, 360, 720)
+
+            
+
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
                 player.entrance()
@@ -450,8 +452,8 @@ class Game:
                 game_over_bg = self.screen.copy()
                 self.game_over(game_over_bg)
 
-            health_bar.draw(ui_surface, player.health)
-            shield_bar.draw(ui_surface, player.shield)
+            health_bar.draw(ui_surface, player.health, player.max_health)
+            shield_bar.draw(ui_surface, player.shield, player.max_shield)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
             firing = pygame.mouse.get_pressed()[0] 
@@ -479,7 +481,7 @@ class Game:
                 # If bullet just exploded (not alive and has explosion_radius), create visual effect
                 if not alive and bullet.explosion_radius > 0 and not hasattr(bullet, '_visual_created'):
                     bullet._visual_created = True
-                    explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                    explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                     explosion_group.add(explosion)
                 if alive:
                     alive_bullets.append(bullet)
@@ -543,7 +545,7 @@ class Game:
                         if bullet in player_bullets:
                             if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
                                 bullet.explode(all_enemies, player_bullets)
-                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                                 explosion_group.add(explosion)
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
