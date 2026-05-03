@@ -4,9 +4,9 @@ from weapons import *
 from player import *
 import weapons
 
-CARD_WIDTH = width // 4
+CARD_WIDTH = width // 3.95
 CARD_HEIGHT = height // 1.25
-CARD_SPACING = 50
+CARD_SPACING = 35
 ANIMATION_DURATION = 1500
 
 upgrade_icon_map = {
@@ -19,7 +19,9 @@ upgrade_icon_map = {
     "Health Pack": "icons/heal.png",
     "Shield Regen": "icons/armor-upgrade.png",
     "Reinforced Hull": "icons/ram-profile.png",
-    "Ammo Cache": "icons/ammo-box.png"
+    "Ammo Cache": "icons/ammo-box.png",
+    "Fortified Shield": "icons/bordered-shield.png",
+    "Thruster Optimization": "icons/thruster-upgrade.png",
 
 }
 
@@ -27,8 +29,8 @@ upgrade_icon_map = {
 class Upgrade:
     def __init__(self, x, y, card_type, title, description, icon):
         self.rect = pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT)
-        self.original_y = y
-        self.target_y = y - 50  # Cards pop up
+        self.original_y = y + height
+        self.target_y = y   # Cards pop up
         self.start_time = pygame.time.get_ticks()
         self.card_type = card_type
         self.title = title
@@ -73,27 +75,30 @@ class Upgrade:
         pygame.draw.rect(card_surf, (100, 150, 200), (10, 10, CARD_WIDTH-20, CARD_HEIGHT-20), border_radius=12)
     
         # ICON AREA
-        icon_rect = pygame.Rect(60, 40, 70, 70)
-        pygame.draw.circle(card_surf, (255, 255, 255), icon_rect.center, 35, 3)
-        if self.icon:
-            icon_size = 60
-            icon_scaled = pygame.transform.scale(self.icon, (icon_size, icon_size))
-            # Center icon
-            icon_pos = icon_scaled.get_rect(center=icon_rect.center)
-            # Rounded dark background
-            pygame.draw.rect(card_surf, (25, 30, 35), icon_pos.inflate(4, 4), border_radius=12)
-            card_surf.blit(icon_scaled, icon_pos)
-        else:
-            pygame.draw.circle(card_surf, (200, 100, 50), icon_rect.center, 25)
+        icon_size = int(CARD_WIDTH * 0.5)
+
+        icon_scaled = pygame.transform.scale(self.icon, (icon_size, icon_size))
+
+        icon_center = (CARD_WIDTH // 2, 150)
+
+        icon_rect = icon_scaled.get_rect(center=icon_center)
+
+        bg_rect = icon_rect.inflate(30, 30)
+        pygame.draw.rect(card_surf, (25, 30, 35), bg_rect, border_radius=20)
+
+        if self.hovered:
+            pygame.draw.rect(card_surf, (100, 150, 200), bg_rect, 3, border_radius=20)
+
+        card_surf.blit(icon_scaled, icon_rect)
         
         # TITLE
-        title_surf = font_large.render(self.title, True, (255, 255, 255))
-        title_rect = title_surf.get_rect(center=(CARD_WIDTH//2, 100))
+        title_surf = font_large.render(self.title, False, (255, 255, 255))
+        title_rect = title_surf.get_rect(center=(CARD_WIDTH//2, 300))
         card_surf.blit(title_surf, title_rect)
         
         # Description
-        desc_surf = font_small.render(self.description, True, (220, 220, 220))
-        desc_rect = desc_surf.get_rect(center=(CARD_WIDTH//2, 180))
+        desc_surf = font_small.render(self.description, False, (220, 220, 220))
+        desc_rect = desc_surf.get_rect(center=(CARD_WIDTH//2, 320))
         card_surf.blit(desc_surf, desc_rect)
 
         # Type badge
@@ -130,18 +135,18 @@ class Upgrade:
     @staticmethod
     def generate_upgrades():
         upgrades = [
-            ["Weapon", "Shotgun fire rate", "Decrease Shotgun fire rate.", load_image_alpha(upgrade_icon_map["Shotgun fire rate"])],#
-            ["Weapon", "Railgun Piercing Shot", "Railgun bullets pierce through enemies.", load_image_alpha(upgrade_icon_map["Piercing Shot"])],#
-            ["Weapon", "Explosive Shot", "Increase explosion radius for ROCKETS.", load_image_alpha(upgrade_icon_map["Explosive Shot"])],#
-            ["Passive", "Vitality Boost", "Increases maximum health.", load_image_alpha(upgrade_icon_map["Increased Health"])],#
-            ["Passive", "Fortified Shield", "Increases maximum shield.", None],
-            ["Passive", "Thruster Optimization", "Increases maximum speed.", None],
-            ["Passive", "Faster Reload", "Faster weapon swapping.", load_image_alpha(upgrade_icon_map["Faster Reload"])],#
-            ["Passive", "Damage Boost", "Increases all weapon damage.", load_image_alpha(upgrade_icon_map["Damage Boost"])],#
-            ["Health", "Health Pack", "Restores 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],#
-            ["Health", "Shield Regen", "Decreases time to shield regen.", load_image_alpha(upgrade_icon_map["Shield Regen"])],#
-            ["Ramming", "Reinforced Hull", "Increase RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],#
-            ["Max Ammo", "Ammo Cache", "Increases ammo capacity for all weapons.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]#
+            ["Weapon", "Shotgun fire rate", "Faster shotgun cycling.", load_image_alpha(upgrade_icon_map["Shotgun fire rate"])],
+            ["Weapon", "Railgun Piercing Shot", "Railgun rounds pierce targets.", load_image_alpha(upgrade_icon_map["Piercing Shot"])],
+            ["Weapon", "Explosive Shot", "Wider blast radius for rockets.", load_image_alpha(upgrade_icon_map["Explosive Shot"])],
+            ["Passive", "Vitality Boost", "Core integrity boosted.", load_image_alpha(upgrade_icon_map["Increased Health"])],
+            ["Passive", "Fortified Shield", "Shield capacity boosted.", load_image_alpha(upgrade_icon_map["Fortified Shield"])],
+            ["Passive", "Thruster Optimization", "Enhanced thrust output.", load_image_alpha(upgrade_icon_map["Thruster Optimization"])],
+            ["Passive", "Faster Reload", "Reload systems optimized.", load_image_alpha(upgrade_icon_map["Faster Reload"])],
+            ["Passive", "Damage Boost", "Weapon output amplified.", load_image_alpha(upgrade_icon_map["Damage Boost"])],
+            ["Health", "Health Pack", "Restore 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],
+            ["Health", "Shield Regen", "Faster shield recovery.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
+            ["Ramming", "Reinforced Hull", "Increased RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
+            ["Max Ammo", "Ammo Cache", "Ammo reserves expanded.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
         ]
 
         selected_upgrade = random.sample(upgrades, 3)
@@ -225,8 +230,8 @@ class Upgrade:
                         weapon.damage = int(weapon.damage * 1.25)
 
         elif upgrade_title == "Ammo Cache":
-            weapons.max_ammo_bonus += 5
+            weapons.max_ammo_bonus = int(weapons.max_ammo_bonus * 1.25)
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon is not None:
-                    weapon.ammo += 5
+                    weapon.ammo = int(weapon.ammo * 1.25)

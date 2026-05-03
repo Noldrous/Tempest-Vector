@@ -47,6 +47,8 @@ class Game:
             "skull1": load_image_alpha('ui/skull1.png'),
             "skull2": load_image_alpha('ui/skull2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
+            "cursor": load_image_alpha("ui/crosshair.png"),
+            "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (64, 64))
         }
 
         self.bg_positions = {
@@ -212,6 +214,7 @@ class Game:
             pygame.display.update()
             
     def pause_menu(self, background):
+        pygame.mouse.set_visible(True)
         panel_width = 300
         panel_x = self.width
         target_x = self.width - panel_width
@@ -291,6 +294,7 @@ class Game:
             self.clock.tick(60)
 
     def game_over(self, background):
+        pygame.mouse.set_visible(True)
         panel_width = self.width
         panel_height = self.height // 4
         right_panel_x = self.width
@@ -364,7 +368,7 @@ class Game:
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
         load_bullet_sheets()
-
+        
         # HEALTH BAR
         hpBar_x = 50
         hpBar_y = self.height - 550
@@ -426,6 +430,7 @@ class Game:
                         if event.key == pygame.K_ESCAPE:
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
+                            
 
             ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
             ui_surface.fill((0, 0, 0, 0))  # clear with transparency
@@ -532,6 +537,9 @@ class Game:
             # Remove dead enemies
             for enemy in all_enemies[:]:
                 if enemy.health <= 0:
+            # Create explosion animation at enemy position
+                    explosion = EnemyExplosion(int(enemy.pos.x), int(enemy.pos.y), enemy.hit_radius)
+                    explosion_group.add(explosion)
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -581,6 +589,8 @@ class Game:
             # Update and draw explosions
             explosion_group.update()
             explosion_group.draw(self.screen)
+            enemy_explosion_group.update()
+            enemy_explosion_group.draw(self.screen)
 
             # UPGRADE SCREEN
             if show_upgrade_screen:
@@ -608,7 +618,9 @@ class Game:
                 wave_msg_surface = self.sfont.render(wave_message, True, (255, 255, 0))
                 wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
-
+            
+            pygame.mouse.set_visible(False)
+            self.screen.blit(self.assets["cursor_scaled"], mouse)
             ui_surface.set_alpha(ui_alpha)
             self.screen.blit(ui_surface, (0, 0))
             pygame.display.update()

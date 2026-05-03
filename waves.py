@@ -57,23 +57,15 @@ class WaveManager:
 
     def spawn_enemy(self):
         spawn_locations = [
-            (random.randint(0, width), -200),
+            (random.randint(0, width), - 200),
             (random.randint(0, width), height + 200),
             (-200, random.randint(0, height)),
-            (width + 200, random.randint(0, height))
-        ]
+            (width + 200, random.randint(0, height))]
 
         x, y = random.choice(spawn_locations)
-        if self.current_wave > 14 and self.current_wave % 7 == 0:
-            if self.enemies_spawned == 0:
-                enemy_type_roll = random.random()
-                if enemy_type_roll < 0.5:
-                    enemy = ChargerBoss(x, y)
-                else:
-                    enemy = ShooterEnemy(x, y)
-            else:
-                return
-        elif self.current_wave % 14 == 0:
+
+        enemy = None
+        if self.current_wave % 14 == 0:
             if self.enemies_spawned == 0:
                 enemy = MotherShip()
             else:
@@ -83,31 +75,40 @@ class WaveManager:
                 enemy = ChargerBoss(x, y)
             else:
                 return
-        elif self.current_wave > 14:
-            enemy_type_roll = random.random()
+        elif self.current_wave > 14 and self.current_wave % 7 == 0:
+            if self.enemies_spawned == 0:
+                enemy = ChargerBoss(x, y) if random.random() < 0.5 else ShooterEnemy(x, y)
+            else:
+                return
+        elif self.current_wave > 7:
+            r = random.random()
 
-            if enemy_type_roll < 0.1:
+            if r < 0.1:
                 enemy = EliteSeekerEnemy(x, y)
-            elif enemy_type_roll < 0.2:
+            elif r < 0.2:
                 enemy = EliteShooterEnemy(x, y)
-            elif enemy_type_roll < 0.5:
-                enemy = SeekerEnemy(x,y)
-            elif enemy_type_roll < 0.8:
-                enemy = ShooterEnemy(x,y)
+            elif r < 0.5:
+                enemy = SeekerEnemy(x, y)
+            elif r < 0.8:
+                enemy = ShooterEnemy(x, y)
             else:
                 enemy = TeleporterEnemy(x, y)
         else:
-            enemy_type_roll = random.random()
+            r = random.random()
 
-            if enemy_type_roll < 0.3:
+            if r < 0.3:
                 enemy = SeekerEnemy(x, y)
-            elif enemy_type_roll < 0.6:
+            elif r < 0.6:
                 enemy = ShooterEnemy(x, y)
             else:
                 enemy = TeleporterEnemy(x, y)
 
+        if enemy is None:
+            return
+
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier
+
         self.all_enemies.append(enemy)
 
     def remove_enemy(self, enemy):

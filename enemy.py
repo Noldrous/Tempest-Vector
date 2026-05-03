@@ -557,15 +557,16 @@ class ChargerBoss(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
 
-        self.health = 3000
-        self.base_damage = 1
+        self.health = 5000
+        self.base_damage = 1.5
         self.base_speed = 3
         self.hit_radius = 90
 
         self.angle = 0
         self.turn_speed = 0.05
 
-        self.state = "aim"
+        self.state = "enter"
+        self.enter_target = pygame.Vector2(width // 2, height // 2)
         self.state_timer = 0
         self.bullets = []
 
@@ -577,11 +578,13 @@ class ChargerBoss(Enemy):
         self.sprite_sheet_image = load_image_alpha("enemies/charger.png")
         self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
         self.animations = {
+            "enter": [],
             "aim":  [],
             "charge": [],
             "recover": [],
         }
         self.animation_cooldowns = {
+            "enter": 20,
             "aim": 320,
             "charge": 150,
             "recover": 90,
@@ -592,6 +595,8 @@ class ChargerBoss(Enemy):
 
         self.last_update = pygame.time.get_ticks()
         self.frame = 0
+        for x in range(34):
+            self.animations["enter"].append(self.sprite_sheet.get_image(x, 0, 128, 128, 1.5))
         for x in range(34):
             self.animations["aim"].append(self.sprite_sheet.get_image(x, 0, 128, 128, 1.5))
         for x in range(34):
@@ -619,9 +624,34 @@ class ChargerBoss(Enemy):
         self.state_timer += 1
 
         # -------------------
+        # ENTER STATE
+        # -------------------
+        if self.state == "enter":
+            direction = self.enter_target - self.pos
+            distance = direction.length()
+
+            if distance > 5:
+                direction = direction.normalize()
+                self.pos += direction * 4  # entry speed (adjust feel here)
+            else:
+                self.state = "aim"
+                self.state_timer = 0
+                self.frame = 0
+
+            # optional: still rotate toward target for drama
+            dx = player_pos.x - self.pos.x
+            dy = player_pos.y - self.pos.y
+            target_angle = math.atan2(dy, dx)
+
+            diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+
+            self.angle += max(-self.turn_speed, min(self.turn_speed, diff))
+
+            return
+        # -------------------
         # AIM STATE
         # -------------------
-        if self.state == "aim":
+        elif self.state == "aim":
 
             dx = player_pos.x - self.pos.x
             dy = player_pos.y - self.pos.y
@@ -705,7 +735,7 @@ class MotherShip(Enemy):
     def __init__(self):
         super().__init__(width // 2, height // 2)
 
-        self.health = 6000
+        self.health = 8000
         self.base_damage = 10
         self.base_speed = 0
         self.hit_radius = 90
@@ -744,8 +774,6 @@ class MotherShip(Enemy):
 
     def update(self, player_pos):
         current_time = pygame.time.get_ticks()
-        self.animation_list = self.animations[self.state]
-        self.animation_cooldown = self.animation_cooldowns[self.state]
         if current_time - self.last_update >= self.animation_cooldown:
             self.frame += 1
             self.last_update = current_time

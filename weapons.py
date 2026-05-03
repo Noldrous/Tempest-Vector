@@ -107,7 +107,6 @@ class Bullet:
         self.lifetime -= 1
 
     def draw(self, screen):
-        
         data = WEAPON_DATA[self.weapon_name]
         sheet = BULLET_SHEETS[self.weapon_name]
         scale = data.get("scale", 1)
@@ -151,18 +150,26 @@ class Weapon:
         self.bullet_piercing = bullet_piercing
         self.explosion_radius = explosion_radius
         self.last_shot = 0
+        shoot_sounds = {
+            "Machine Gun": pygame.mixer.Sound("assets/audio/sfx/player/machinegun.mp3"),
+            "Shotgun": pygame.mixer.Sound("assets/audio/sfx/player/shotgun.mp3"),
+            "Rail Gun": pygame.mixer.Sound("assets/audio/sfx/player/railgun.mp3"),
+            "Rockets": pygame.mixer.Sound("assets/audio/sfx/player/rocket.mp3"),
+        }
 
     def can_shoot(self):
         current_time = pygame.time.get_ticks()
         return self.ammo > 0 and (current_time - self.last_shot) >= self.rate
-    
+
     def shoot(self, x, y, angle ):
-        if not self.can_shoot():
-            return []
-        
-        self.last_shot = pygame.time.get_ticks()
-        self.ammo -= 1
-        return self.create_bullets(x,y,angle)
+            if not self.can_shoot():
+                return []
+
+            self.last_shot = pygame.time.get_ticks()
+            self.ammo -= 1
+            self.shoot_sounds.play()
+
+            return self.create_bullets(x, y, angle)
     
     def create_bullets(self, x, y, angle):
         bullets = []
@@ -197,6 +204,7 @@ class MachineGun(Weapon):
             bullet_count=3,
             bullet_lifetime=90,
         )
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/machinegun.mp3")
     
 class Shotgun(Weapon):
     def __init__(self):
@@ -211,6 +219,7 @@ class Shotgun(Weapon):
             bullet_count=8,
             bullet_lifetime=17,
         )
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/shotgun.mp3")
 
 class RailGun(Weapon):
     def __init__(self):
@@ -226,6 +235,7 @@ class RailGun(Weapon):
             bullet_lifetime=100,
             bullet_piercing=False
         )
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/railgun.mp3")
 
 class Rockets(Weapon):
     def __init__(self):
@@ -241,6 +251,7 @@ class Rockets(Weapon):
             bullet_lifetime=100,
             explosion_radius=75
         )
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/rocket.mp3")
 
 class Weapons:
     def __init__(self, cycle_delay=2000):
