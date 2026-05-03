@@ -63,12 +63,12 @@ class Game:
         self.background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
         self.sway_time = 0
 
-    def setbackground(self, key, speed, pos1, pos2, pos3):
+    def setbackground(self, key, speed, pos1, pos2, pos3, pos4):
         bg = self.assets[key]
         bg_width = bg.get_width()
         x = self.bg_positions[key]
 
-        for y in (pos1, pos2, pos3):
+        for y in (pos1, pos2, pos3, pos4):
             self.screen.blit(bg, (x, y))
             self.screen.blit(bg, (x + bg_width, y))
 
@@ -162,13 +162,13 @@ class Game:
             credits_button = credits2 if credit_rect.collidepoint(mouse) else credits1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
             
-            self.setbackground("shadow1", shadow1_speed, 0, 360, 720)
-            self.setbackground("shadow2", shadow2_speed, 0, 360, 720)
-            self.setbackground("celestial1", celestials, 300, self.height, self.height)
-            self.setbackground("celestial2", celestials, 0, self.height, self.height)
-            self.setbackground("celestial3", celestials, 500, self.height, self.height)
-            self.setbackground("star1", star1_speed, 0, 360, 720)
-            self.setbackground("star2", star2_speed, 0, 360, 720)
+            self.setbackground("shadow1", shadow1_speed, 0, 360, 720, 1080)
+            self.setbackground("shadow2", shadow2_speed, 0, 360, 720, 1080)
+            self.setbackground("celestial1", celestials, 300, self.height, self.height, self.height + 360)
+            self.setbackground("celestial2", celestials, 0, self.height, self.height, self.height + 360)
+            self.setbackground("celestial3", celestials, 500, self.height, self.height, self.height + 360)
+            self.setbackground("star1", star1_speed, 0, 360, 720, 1080)
+            self.setbackground("star2", star2_speed, 0, 360, 720, 1080)
             
             self.sway_time += dt
 
@@ -436,13 +436,13 @@ class Game:
             ui_surface.fill((0, 0, 0, 0))  # clear with transparency
 
             self.screen.blit(self.background, (0, 0))
-            self.setbackground("shadow1", 2, 0, 360, 720)
-            self.setbackground("shadow2", 1, 0, 360, 720)
-            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
-            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
-            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
-            self.setbackground("star1", 0.8, 0, 360, 720)
-            self.setbackground("star2", 0.5, 0, 360, 720)
+            self.setbackground("shadow1", 2, 0, 360, 720, 1080)
+            self.setbackground("shadow2", 1, 0, 360, 720, 1080)
+            self.setbackground("celestial1", 0.5, 300, self.height, self.height, self.height + 360)
+            self.setbackground("celestial2", 0.4, 0, self.height, self.height, self.height + 360)
+            self.setbackground("celestial3", 0.3, 500, self.height, self.height, self.height + 360)
+            self.setbackground("star1", 0.8, 0, 360, 720, 1080)
+            self.setbackground("star2", 0.5, 0, 360, 720, 1080)
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
