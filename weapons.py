@@ -150,12 +150,6 @@ class Weapon:
         self.bullet_piercing = bullet_piercing
         self.explosion_radius = explosion_radius
         self.last_shot = 0
-        shoot_sounds = {
-            "Machine Gun": pygame.mixer.Sound("assets/audio/sfx/player/machinegun.mp3"),
-            "Shotgun": pygame.mixer.Sound("assets/audio/sfx/player/shotgun.mp3"),
-            "Rail Gun": pygame.mixer.Sound("assets/audio/sfx/player/railgun.mp3"),
-            "Rockets": pygame.mixer.Sound("assets/audio/sfx/player/rocket.mp3"),
-        }
 
     def can_shoot(self):
         current_time = pygame.time.get_ticks()

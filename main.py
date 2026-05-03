@@ -48,7 +48,14 @@ class Game:
             "skull2": load_image_alpha('ui/skull2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
             "cursor": load_image_alpha("ui/crosshair.png"),
-            "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (64, 64))
+            "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (48, 48))
+        }
+
+        self.audio = {
+            "explosion": pygame.mixer.Sound("assets/audio/sfx/enemy/Explosion.wav"),
+            "player_hit": pygame.mixer.Sound("assets/audio/sfx/player/Hit.wav"),
+            "enemy_hit": pygame.mixer.Sound("assets/audio/sfx/enemy/enemy_hit.wav"),
+            "crash": pygame.mixer.Sound("assets/audio/sfx/crash.wav"),
         }
 
         self.bg_positions = {
@@ -401,6 +408,8 @@ class Game:
         ui_alpha = 0
         ui_fade_speed = 300
 
+        cursor_rect = self.assets["cursor_scaled"].get_rect()
+
         while True:
             dt = self.clock.tick(60) / 1000.0
             game_time += dt
@@ -410,6 +419,12 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
+                if event.type == pygame.MOUSEMOTION:
+                    # If the mouse is moved, set the center of the rect
+                    # to the mouse pos. You can also use pygame.mouse.get_pos()
+                    # if you're not in the event loop.
+                    cursor_rect.center = event.pos
 
                 if show_upgrade_screen:
                     mouse_pos = pygame.mouse.get_pos()
@@ -487,6 +502,7 @@ class Game:
                     bullet._visual_created = True
                     explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                     explosion_group.add(explosion)
+                    self.audio["explosion"].play()
                 if alive:
                     alive_bullets.append(bullet)
             
@@ -537,9 +553,10 @@ class Game:
             # Remove dead enemies
             for enemy in all_enemies[:]:
                 if enemy.health <= 0:
-            # Create explosion animation at enemy position
+                # Create explosion animation at enemy position
                     explosion = EnemyExplosion(int(enemy.pos.x), int(enemy.pos.y), enemy.hit_radius)
                     explosion_group.add(explosion)
+                    self.audio["explosion"].play()
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -549,12 +566,14 @@ class Game:
                     distance = enemy.pos.distance_to(bullet.pos)
 
                     if distance < enemy.hit_radius + bullet.radius:
+                        self.audio["enemy_hit"].play()
                         enemy.take_damage(bullet.damage)
                         if bullet in player_bullets:
                             if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
                                 bullet.explode(all_enemies, player_bullets)
                                 explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                                 explosion_group.add(explosion)
+                                self.audio["explosion"].play()
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
                         break
@@ -568,8 +587,9 @@ class Game:
                         if distance < player.ship_radius + bullet.radius:
                             player.take_damage(bullet.damage)
                             enemy.bullets.remove(bullet)
+                            self.audio["player_hit"].play()
                             break
-            
+                            
             # Enemy collision with player
             for enemy in all_enemies[:]:
                 distance = player.ship_pos.distance_to(enemy.pos)
@@ -578,6 +598,7 @@ class Game:
 
                     player.take_damage(enemy.final_damage)
                     enemy.take_damage(player.ramming_damage)
+                    self.audio["crash"].play()
 
                     direction = enemy.pos - player.ship_pos
                     if direction.length() != 0:
@@ -620,7 +641,7 @@ class Game:
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
             
             pygame.mouse.set_visible(False)
-            self.screen.blit(self.assets["cursor_scaled"], mouse)
+            self.screen.blit(self.assets["cursor_scaled"], cursor_rect)
             ui_surface.set_alpha(ui_alpha)
             self.screen.blit(ui_surface, (0, 0))
             pygame.display.update()

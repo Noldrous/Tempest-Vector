@@ -14,7 +14,7 @@ class Particle:
     def draw(self, screen):
         if self.life > 0:
             pygame.draw.rect(screen, (255, 0, 0), (int(self.pos.x), int(self.pos.y), 8 , 8))
-            pygame.draw.rect(screen, (255, 150, 50), (int(self.pos.x)+2, int(self.pos.y)+2, 4, 4))
+            pygame.draw.rect(screen, (44, 255, 5), (int(self.pos.x)+2, int(self.pos.y)+2, 4, 4))
 
 class EnemyExplosion(pygame.sprite.Sprite):
     def __init__(self, x, y, radius):
