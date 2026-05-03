@@ -33,9 +33,8 @@ class Enemy_Bullet:
         return self.lifetime > 0
 
     def draw(self, screen):
-        pygame.draw.circle(screen, (255,200,50),
-                           (int(self.pos.x), int(self.pos.y)),
-                           self.radius)
+        pygame.draw.circle(screen, (255, 255, 255), (int(self.pos.x), int(self.pos.y)), self.radius)
+        pygame.draw.circle(screen, (44, 255, 5), (int(self.pos.x), int(self.pos.y)), self.radius, 2)
 
 class SeekerEnemy(Enemy):
     def __init__(self, x, y):
@@ -103,7 +102,7 @@ class SeekerEnemy(Enemy):
 class EliteSeekerEnemy(SeekerEnemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 120
+        self.health = 175
         self.base_damage = 12
         self.base_speed = 4
         self.hit_radius = 30
@@ -281,7 +280,7 @@ class ShooterEnemy(Enemy):
 class EliteShooterEnemy(ShooterEnemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 110
+        self.health = 150
         self.base_damage = 4
         self.base_speed = 2
         self.hit_radius = 40
@@ -606,11 +605,10 @@ class ChargerBoss(Enemy):
 
     @property
     def max_speed(self):
-        return self.base_speed * 1
-
+            return self.base_speed * self.speed_multiplier
     @property
     def final_damage(self):
-        return self.velocity.length() * self.base_damage
+            return self.base_damage * self.damage_multiplier
     
     def update(self, player_pos):
         self.current_time = pygame.time.get_ticks()
@@ -769,8 +767,11 @@ class MotherShip(Enemy):
             self.animation_list.append(self.sprite_sheet.get_image(x, 0, 256, 256, 0.8))
 
     @property
+    def max_speed(self):
+            return self.base_speed * self.speed_multiplier
+    @property
     def final_damage(self):
-        return self.base_damage * self.damage_multiplier
+            return self.base_damage * self.damage_multiplier
 
     def update(self, player_pos):
         current_time = pygame.time.get_ticks()

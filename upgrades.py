@@ -159,7 +159,6 @@ class Upgrade:
     def apply_upgrade(player, weapons, upgrade_title):
         if upgrade_title == "Vitality Boost":
             player.max_health += 50
-            player.health = player.max_health
 
         elif upgrade_title == "Fortified Shield":
             player.max_shield += 50
@@ -208,9 +207,8 @@ class Upgrade:
                     Rockets.__init__(weapon)
                     weapon.damage = old_damage * 1.5
                     weapon.explosion_radius *= 1.25
-                    # Manually set bigger explosion (since init doesn't support it yet)
                     
-        elif upgrade_title == "SG fire rate":
+        elif upgrade_title == "Shotgun fire rate":
             # Only affects Shotgun - increases spread
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:

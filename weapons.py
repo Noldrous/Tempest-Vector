@@ -74,7 +74,7 @@ class Bullet:
             for enemy in all_enemies[:]:
                 distance = enemy.pos.distance_to(self.pos)
                 if distance < self.explosion_radius:
-                    enemy.take_damage(self.damage // 2)
+                    enemy.take_damage(self.damage // 4)
         
         # Visual explosion effect
         for _ in range(20):
@@ -223,7 +223,7 @@ class RailGun(Weapon):
             ammo=7,
             rate=700,
             damage=75,
-            bullet_size=8,
+            bullet_size=10,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
@@ -236,14 +236,14 @@ class Rockets(Weapon):
         super().__init__(
             name='Rockets',
             bullet_speed=50,
-            ammo=6,
+            ammo=4,
             rate=1000,
             damage=200,
             bullet_size=15,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
-            explosion_radius=75
+            explosion_radius=100
         )
         self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/rocket.mp3")
 

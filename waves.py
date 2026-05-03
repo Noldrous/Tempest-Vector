@@ -24,10 +24,16 @@ class WaveManager:
         self.current_wave += 1
         self.enemies_spawned = 0
         self.spawn_timer = 0
+        self.wave_timer = 0
 
-        # scaling formulas
-        self.enemy_count = int(self.base_count * (1.25 ** self.current_wave))
-        self.spawn_interval = max(0.5, self.spawn_interval - self.current_wave * 0.003)
+        self.is_boss_wave = (self.current_wave % 10 == 0)
+
+        if self.is_boss_wave:
+            self.enemy_count = 1  
+        else:
+            self.enemy_count = int(self.base_count * (1.25 ** self.current_wave))
+
+        self.spawn_interval = max(0.25, self.spawn_interval - self.current_wave * 0.003)
         self.speed_multiplier = 1.035 ** self.current_wave
         self.damage_multiplier = 1.08 ** self.current_wave
 
@@ -57,57 +63,49 @@ class WaveManager:
 
     def spawn_enemy(self):
         spawn_locations = [
-            (random.randint(0, width), - 200),
+            (random.randint(0, width), -200),
             (random.randint(0, width), height + 200),
             (-200, random.randint(0, height)),
-            (width + 200, random.randint(0, height))]
+            (width + 200, random.randint(0, height))
+        ]
 
         x, y = random.choice(spawn_locations)
 
-        enemy = None
-        if self.current_wave % 14 == 0:
-            if self.enemies_spawned == 0:
-                enemy = MotherShip()
-            else:
-                return
-        elif self.current_wave % 7 == 0:
-            if self.enemies_spawned == 0:
+        if self.is_boss_wave:
+            boss_roll = random.random()
+
+            if boss_roll < 0.5:
                 enemy = ChargerBoss(x, y)
             else:
-                return
-        elif self.current_wave > 14 and self.current_wave % 7 == 0:
-            if self.enemies_spawned == 0:
-                enemy = ChargerBoss(x, y) if random.random() < 0.5 else ShooterEnemy(x, y)
-            else:
-                return
-        elif self.current_wave > 7:
-            r = random.random()
+                enemy = MotherShip()
 
-            if r < 0.1:
-                enemy = EliteSeekerEnemy(x, y)
-            elif r < 0.2:
-                enemy = EliteShooterEnemy(x, y)
-            elif r < 0.5:
-                enemy = SeekerEnemy(x, y)
-            elif r < 0.8:
-                enemy = ShooterEnemy(x, y)
-            else:
-                enemy = TeleporterEnemy(x, y)
-        else:
-            r = random.random()
+            enemy.speed_multiplier = self.speed_multiplier
+            enemy.damage_multiplier = self.damage_multiplier
+            enemy.health *= (1.2 ** (self.current_wave // 10))
 
-            if r < 0.3:
-                enemy = SeekerEnemy(x, y)
-            elif r < 0.6:
-                enemy = ShooterEnemy(x, y)
-            else:
-                enemy = TeleporterEnemy(x, y)
-
-        if enemy is None:
+            self.all_enemies.append(enemy)
             return
+
+        enemy_type_roll = random.random()
+
+        elite_chance = 0
+        if self.current_wave >= 11:
+            elite_chance = min(0.3, (self.current_wave - 10) * 0.02)  
+
+        is_elite = random.random() < elite_chance
+
+        if enemy_type_roll < 0.3:
+            enemy = EliteSeekerEnemy(x, y) if is_elite else SeekerEnemy(x, y)
+
+        elif enemy_type_roll < 0.6:
+            enemy = EliteShooterEnemy(x, y) if is_elite else ShooterEnemy(x, y)
+
+        else:
+            enemy = TeleporterEnemy(x, y)
 
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier
+        enemy.health *= (1.2 ** (self.current_wave // 10))
 
         self.all_enemies.append(enemy)
 
