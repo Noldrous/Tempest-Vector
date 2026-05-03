@@ -51,11 +51,19 @@ class Game:
             "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (48, 48))
         }
 
-        self.audio = {
+        self.sfx = {
             "explosion": pygame.mixer.Sound("assets/audio/sfx/enemy/Explosion.wav"),
             "player_hit": pygame.mixer.Sound("assets/audio/sfx/player/Hit.wav"),
             "enemy_hit": pygame.mixer.Sound("assets/audio/sfx/enemy/enemy_hit.wav"),
             "crash": pygame.mixer.Sound("assets/audio/sfx/crash.wav"),
+            "skeleton": pygame.mixer.Sound("assets/audio/sfx/skeleton.mp3"),
+            "boost": pygame.mixer.Sound("assets/audio/sfx/boost.mp3"),
+            "boost2": pygame.mixer.Sound("assets/audio/sfx/boost2.mp3"),
+        }
+
+        self.music = {
+            "menu": "assets/audio/music/menu_music.mp3",
+            "game": "assets/audio/music/game_music.mp3"
         }
 
         self.bg_positions = {
@@ -127,6 +135,10 @@ class Game:
         ship_y = self.height // 1.7
         ship_particles = []
 
+        pygame.mixer.music.load(self.music["menu"])
+        pygame.mixer.music.play(-1)
+        boost_played = False
+
         while True:
             dt = self.clock.tick(60) / 1000.0   
             self.sway_time += dt
@@ -141,6 +153,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if play_rect.collidepoint(mouse) and mouse_buttons[0]:
+                        pygame.mixer.music.stop()
                         play_pressed = True
                             
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
@@ -159,6 +172,10 @@ class Game:
                 title_rect.x -= 25
 
                 ship_move_x += 30
+                if not boost_played:
+                    self.sfx["boost"].play()
+                    boost_played = True
+
 
                 if ship_base_x + ship_move_x > self.width + 500:
                     self.game()
@@ -253,8 +270,11 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if resume_rect.collidepoint(mouse):
+                        pygame.mixer.music.set_volume(1.0)
                         resume = True
                     if restart_rect.collidepoint(mouse):
+                        pygame.mixer.music.stop()
+                        pygame.mixer.music.set_volume(1.0)
                         self.game()
                     if quit_rect.collidepoint(mouse):
                         pygame.quit()
@@ -325,6 +345,7 @@ class Game:
         skull_rect = skull1.get_rect(center=(self.width//2, self.height//2 - 75))
 
         timer = 0
+        skeleton_played = True
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -358,8 +379,16 @@ class Game:
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
 
             timer += 1
-            skull = skull1 if timer < 75 else skull2
-            if timer > 150:
+            if timer < 90:
+                skull = skull1
+                skeleton_played = False
+            else:
+                skull = skull2
+                if not skeleton_played:
+                    self.sfx["skeleton"].play()
+                    skeleton_played = True
+
+            if timer > 180:
                 timer=0
 
             self.screen.blit(game_over_text, text_rect)
@@ -410,6 +439,9 @@ class Game:
 
         cursor_rect = self.assets["cursor_scaled"].get_rect()
 
+        boost_played = False
+        music_started = False
+
         while True:
             dt = self.clock.tick(60) / 1000.0
             game_time += dt
@@ -443,6 +475,7 @@ class Game:
                 else:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
+                            pygame.mixer.music.set_volume(0.5)
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
                             
@@ -462,12 +495,23 @@ class Game:
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
                 player.entrance()
+                if not boost_played:
+                    self.sfx["boost2"].play()
+                    boost_played = True
             else:
                 player.move()
+
+                if not music_started:
+                    pygame.mixer.music.load(self.music["game"])
+                    pygame.mixer.music.play(-1)
+                    music_started = True
+
             player.regen_shield()
             player.draw(self.screen)
 
             if player.health <= 0:
+                pygame.mixer.music.stop()
+                player.boost_sound.stop()
                 game_over_bg = self.screen.copy()
                 self.game_over(game_over_bg)
 
@@ -502,7 +546,7 @@ class Game:
                     bullet._visual_created = True
                     explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                     explosion_group.add(explosion)
-                    self.audio["explosion"].play()
+                    self.sfx["explosion"].play()
                 if alive:
                     alive_bullets.append(bullet)
             
@@ -556,7 +600,7 @@ class Game:
                 # Create explosion animation at enemy position
                     explosion = EnemyExplosion(int(enemy.pos.x), int(enemy.pos.y), enemy.hit_radius)
                     explosion_group.add(explosion)
-                    self.audio["explosion"].play()
+                    self.sfx["explosion"].play()
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -566,14 +610,14 @@ class Game:
                     distance = enemy.pos.distance_to(bullet.pos)
 
                     if distance < enemy.hit_radius + bullet.radius:
-                        self.audio["enemy_hit"].play()
+                        self.sfx["enemy_hit"].play()
                         enemy.take_damage(bullet.damage)
                         if bullet in player_bullets:
                             if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
                                 bullet.explode(all_enemies, player_bullets)
                                 explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                                 explosion_group.add(explosion)
-                                self.audio["explosion"].play()
+                                self.sfx["explosion"].play()
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
                         break
@@ -587,7 +631,7 @@ class Game:
                         if distance < player.ship_radius + bullet.radius:
                             player.take_damage(bullet.damage)
                             enemy.bullets.remove(bullet)
-                            self.audio["player_hit"].play()
+                            self.sfx["player_hit"].play()
                             break
                             
             # Enemy collision with player
@@ -598,7 +642,7 @@ class Game:
 
                     player.take_damage(enemy.final_damage)
                     enemy.take_damage(player.ramming_damage)
-                    self.audio["crash"].play()
+                    self.sfx["crash"].play()
 
                     direction = enemy.pos - player.ship_pos
                     if direction.length() != 0:

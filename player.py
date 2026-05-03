@@ -11,8 +11,8 @@ class Player:
         self.max_health = 200
 
         self.shield = 100
-        self.shield_regeneration = 1
         self.max_shield = 100
+        self.shield_regeneration = 1
         self.shield_regen_delay = 240
         self.last_damage_timer = 0
 
@@ -49,6 +49,9 @@ class Player:
             for i in range(self.frame_count):
                 row_frames.append(self.sprite_sheet.get_image(i, row,self.frame_width, self.frame_height, self.scale))
             self.frames.append(row_frames)
+
+        self.boost_sound = pygame.mixer.Sound("assets/audio/sfx/player/thrust.mp3")
+        self.boost_sound_playing = False
 
     @property
     def ramming_damage(self):
@@ -135,7 +138,12 @@ class Player:
             thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
             self.velocity += thrust * self.thrust_power
 
-            # spawn particles behind ship
+            # 🔊 Start boost sound (loop)
+            if not self.boost_sound_playing:
+                self.boost_sound.play(-1)
+                self.boost_sound_playing = True
+
+            # particles
             for _ in range(2):
                 offset = pygame.Vector2(-math.cos(self.angle), -math.sin(self.angle)) * 20
                 pos = self.ship_pos + offset
@@ -146,6 +154,11 @@ class Player:
         else:
             self.boosting = False
             self.velocity *= self.friction
+
+            # 🔊 Stop boost sound when released
+            if self.boost_sound_playing:
+                self.boost_sound.stop()
+                self.boost_sound_playing = False
 
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
