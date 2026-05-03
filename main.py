@@ -15,6 +15,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.sfont = pygame.font.Font("assets/font/black-and-white.ttf", 20)
         self.mfont = pygame.font.Font("assets/font/black-and-white.ttf", 35)
+        self.lfont = pygame.font.Font("assets/font/VCR.ttf", 80)
         self.running = True
         
         self.assets = {
@@ -39,8 +40,15 @@ class Game:
             "restart_button2": load_image_alpha('ui/restart2.png'),
             "quit1": load_image_alpha('ui/quit1.png'),
             "quit2": load_image_alpha('ui/quit2.png'),
+            "over_restart1": load_image_alpha('ui/over_restart1.png'),
+            "over_restart2": load_image_alpha('ui/over_restart2.png'),
+            "over_quit1": load_image_alpha('ui/over_quit1.png'),
+            "over_quit2": load_image_alpha('ui/over_quit2.png'),
+            "skull1": load_image_alpha('ui/skull1.png'),
+            "skull2": load_image_alpha('ui/skull2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
-            "seeker": load_image_alpha('enemies/seeker.png'),
+            "cursor": load_image_alpha("ui/crosshair.png"),
+            "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (64, 64))
         }
 
         self.bg_positions = {
@@ -184,7 +192,7 @@ class Game:
                 ship_particles.append(Particle(pos, vel))
             for particle in ship_particles:
                 particle.update()
-            ship_particles = [p for p in ship_particles if p.life > 0]
+            ship_particles[:] = [p for p in ship_particles if p.life > 0]
             for particle in ship_particles:
                 particle.draw(self.screen)
             
@@ -206,6 +214,7 @@ class Game:
             pygame.display.update()
             
     def pause_menu(self, background):
+        pygame.mouse.set_visible(True)
         panel_width = 300
         panel_x = self.width
         target_x = self.width - panel_width
@@ -226,6 +235,9 @@ class Game:
 
         while True:
             mouse = pygame.mouse.get_pos()
+            resume_rect = pygame.Rect(panel_x + 50, 200, 200, 60)
+            restart_rect = pygame.Rect(panel_x + 50, 300, 200, 60)
+            quit_rect = pygame.Rect(panel_x + 50, 400, 200, 60)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -267,11 +279,6 @@ class Game:
             pygame.draw.rect(self.screen, (255, 255, 255), (panel_x, 0, 300, 100), 5) 
             pygame.draw.rect(self.screen, (255, 255, 255), panel_rect, 5)
 
-            resume_rect = pygame.Rect(panel_x + 50, 200, 200, 60)
-            restart_rect = pygame.Rect(panel_x + 50, 300, 200, 60)
-            quit_rect = pygame.Rect(panel_x + 50, 400, 200, 60)
-
-            
             resume_button = resume2 if resume_rect.collidepoint(mouse) else resume1
             restart_button = restart2 if restart_rect.collidepoint(mouse) else restart1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
@@ -286,14 +293,31 @@ class Game:
             pygame.display.update()
             self.clock.tick(60)
 
-    def game_over(self):
+    def game_over(self, background):
+        pygame.mouse.set_visible(True)
         panel_width = self.width
+        panel_height = self.height // 4
         right_panel_x = self.width
         right_panel_targetx = 0
         left_panel_x = -self.width
         left_panel_targetx = 0
 
         anim_speed = 20
+
+        restart1 = pygame.transform.scale(self.assets["over_restart1"], (200, 60))
+        restart2 = pygame.transform.scale(self.assets["over_restart2"], (200, 60))
+        quit1 = pygame.transform.scale(self.assets["over_quit1"], (200, 60))
+        quit2 = pygame.transform.scale(self.assets["over_quit2"], (200, 60))
+        skull1 = pygame.transform.scale(self.assets["skull1"], (350,350))
+        skull2 = pygame.transform.scale(self.assets["skull2"], (350,350))
+        game_over_text = self.lfont.render("[-_-] YOU ARE DEAD [-_-]", False, "darkgray")
+
+        text_rect = game_over_text.get_rect(center=(self.width//2, 60))
+        restart_rect = restart1.get_rect(center=(self.width//2, self.height - 180))
+        quit_rect = quit1.get_rect(center=(self.width//2, self.height - 100))
+        skull_rect = skull1.get_rect(center=(self.width//2, self.height//2 - 75))
+
+        timer = 0
 
         while True:
             mouse = pygame.mouse.get_pos()
@@ -306,27 +330,35 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
-                    if try_again_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if restart_rect.collidepoint(mouse) and mouse_buttons[0]:
                         self.game()
 
-                    if quit_button.collidepoint(mouse) and mouse_buttons[0]:
+                    if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.quit()
                         sys.exit()
+
+            self.screen.blit(background, (0, 0))
                         
             right_panel_x = max(right_panel_targetx, right_panel_x - anim_speed)
             left_panel_x = min(left_panel_targetx, left_panel_x + anim_speed)
 
-            try_again_button = pygame.Rect(width//2 - 70, height - 500, 140, 50)
-            quit_button = pygame.Rect(width //2 - 70, height - 400, 140, 50)
+            pygame.draw.rect(self.screen, (0, 0, 0), (right_panel_x, 0, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (right_panel_x, panel_height*2, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (left_panel_x, panel_height, panel_width, panel_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (left_panel_x, panel_height*3, panel_width, panel_height))
 
-            pygame.draw.rect(self.screen, "skyblue" if try_again_button.collidepoint(mouse) else "darkgray", try_again_button)
-            pygame.draw.rect(self.screen, "skyblue" if quit_button.collidepoint(mouse) else "darkgray", quit_button)
+            restart_button = restart2 if restart_rect.collidepoint(mouse) else restart1
+            quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
 
-            try_again_text = self.sfont.render("Try Again", False, "white")
-            quit_text = self.sfont.render("Quit", False, "white")
+            timer += 1
+            skull = skull1 if timer < 75 else skull2
+            if timer > 150:
+                timer=0
 
-            self.screen.blit(try_again_text, (width//2 - 50, height - 500))
-            self.screen.blit(quit_text, (width//2 - 50, height - 400))
+            self.screen.blit(game_over_text, text_rect)
+            self.screen.blit(restart_button, restart_rect)
+            self.screen.blit(quit_button, quit_rect)
+            self.screen.blit(skull, skull_rect)
 
             pygame.display.update()
 
@@ -336,15 +368,15 @@ class Game:
         weapons = Weapons()
         player.weapon = weapons.main  # Connect player to the weapons system
         load_bullet_sheets()
-
+        
         # HEALTH BAR
         hpBar_x = 50
         hpBar_y = self.height - 550
-        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500, player.health)
+        health_bar = HealthBar(hpBar_x, hpBar_y, 20, 500)
         
         shield_bar_x = 75
         shield_bar_y = self.height - 550
-        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500, player.shield)
+        shield_bar = ShieldBar(shield_bar_x, shield_bar_y, 20, 500)
 
         # Initialize Wave Manager
         wave_manager = WaveManager()
@@ -374,18 +406,6 @@ class Game:
             game_time += dt
             mouse = pygame.mouse.get_pos()
 
-            ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
-            ui_surface.fill((0, 0, 0, 0))  # clear with transparency
-
-            self.screen.blit(self.background, (0, 0))
-            self.setbackground("shadow1", 2, 0, 360, 720)
-            self.setbackground("shadow2", 1, 0, 360, 720)
-            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
-            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
-            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
-            self.setbackground("star1", 0.8, 0, 360, 720)
-            self.setbackground("star2", 0.5, 0, 360, 720)
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -410,6 +430,19 @@ class Game:
                         if event.key == pygame.K_ESCAPE:
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
+                            
+
+            ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
+            ui_surface.fill((0, 0, 0, 0))  # clear with transparency
+
+            self.screen.blit(self.background, (0, 0))
+            self.setbackground("shadow1", 2, 0, 360, 720)
+            self.setbackground("shadow2", 1, 0, 360, 720)
+            self.setbackground("celestial1", 0.5, 300, self.height, self.height)
+            self.setbackground("celestial2", 0.4, 0, self.height, self.height)
+            self.setbackground("celestial3", 0.3, 500, self.height, self.height)
+            self.setbackground("star1", 0.8, 0, 360, 720)
+            self.setbackground("star2", 0.5, 0, 360, 720)
 
             #player -------------------------------------------------------------------------------------------------------------------------------------------------------
             if player.entering:
@@ -420,13 +453,14 @@ class Game:
             player.draw(self.screen)
 
             if player.health <= 0:
-                self.game_over()
+                game_over_bg = self.screen.copy()
+                self.game_over(game_over_bg)
 
-            health_bar.draw(ui_surface, player.health)
-            shield_bar.draw(ui_surface, player.shield)
+            health_bar.draw(ui_surface, player.health, player.max_health)
+            shield_bar.draw(ui_surface, player.shield, player.max_shield)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            firing = pygame.mouse.get_pressed()[0]
+            firing = pygame.mouse.get_pressed()[0] 
             player.shoot(player.weapon, player_bullets, weapons, firing)
 
             # weapon swap check
@@ -436,7 +470,7 @@ class Game:
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)
-                bullet.draw(self.screen,)
+                bullet.draw(self.screen)
 
             # Update waves to get all_enemies before checking bullet lifetimes
             if not show_upgrade_screen:
@@ -451,7 +485,7 @@ class Game:
                 # If bullet just exploded (not alive and has explosion_radius), create visual effect
                 if not alive and bullet.explosion_radius > 0 and not hasattr(bullet, '_visual_created'):
                     bullet._visual_created = True
-                    explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                    explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                     explosion_group.add(explosion)
                 if alive:
                     alive_bullets.append(bullet)
@@ -503,6 +537,9 @@ class Game:
             # Remove dead enemies
             for enemy in all_enemies[:]:
                 if enemy.health <= 0:
+# Create explosion animation at enemy position
+                    explosion = EnemyExplosion(int(enemy.pos.x), int(enemy.pos.y), enemy.hit_radius)
+                    explosion_group.add(explosion)
                     wave_manager.remove_enemy(enemy)
 
             #collision detection -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -516,7 +553,7 @@ class Game:
                         if bullet in player_bullets:
                             if hasattr(bullet, 'explode') and bullet.explosion_radius > 0:
                                 bullet.explode(all_enemies, player_bullets)
-                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y))
+                                explosion = Explosion(int(bullet.pos.x), int(bullet.pos.y), bullet.explosion_radius)
                                 explosion_group.add(explosion)
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
@@ -549,9 +586,11 @@ class Game:
                         enemy.knockback += direction * 10
                         player.velocity -= direction * 10
 
-            # Update and draw explosions
+# Update and draw explosions
             explosion_group.update()
             explosion_group.draw(self.screen)
+            enemy_explosion_group.update()
+            enemy_explosion_group.draw(self.screen)
 
             # UPGRADE SCREEN
             if show_upgrade_screen:
@@ -579,7 +618,9 @@ class Game:
                 wave_msg_surface = self.sfont.render(wave_message, True, (255, 255, 0))
                 wave_msg_rect = wave_msg_surface.get_rect(center=(self.width // 2, 120))
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
-
+            
+            pygame.mouse.set_visible(False)
+            self.screen.blit(self.assets["cursor_scaled"], mouse)
             ui_surface.set_alpha(ui_alpha)
             self.screen.blit(ui_surface, (0, 0))
             pygame.display.update()
