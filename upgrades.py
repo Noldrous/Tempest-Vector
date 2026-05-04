@@ -184,7 +184,7 @@ class Upgrade:
                     weapon.damage = int(weapon.damage * 1.5)
 
         elif upgrade_title == "Repair Pack":
-                player.health *= 1.5
+                player.health += (player.max_health//2)
                 if player.health > player.max_health:
                     player.health = player.max_health
 

@@ -90,7 +90,7 @@ class WaveManager:
 
         elite_chance = 0
         if self.current_wave >= 11:
-            elite_chance = min(0.3, (self.current_wave - 10) * 0.02)  
+            elite_chance = min(0.5, (self.current_wave - 10) * 0.05)  
 
         is_elite = random.random() < elite_chance
 

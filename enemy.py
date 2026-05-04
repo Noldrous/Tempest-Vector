@@ -495,6 +495,7 @@ class TeleporterEnemy(Enemy):
 
                 forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
                 self.shoot_sounds.play()
+
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
 
@@ -615,12 +616,19 @@ class ChargerBoss(Enemy):
         for x in range(34):
             self.animations["recover"].append(self.sprite_sheet.get_image(x, 0, 128, 128, 1.5))
 
+        self.shoot_sound = pygame.mixer.Sound("assets/audio/sfx/enemy/charger_shoot.wav")
+        self.charging_sound = pygame.mixer.Sound("assets/audio/sfx/enemy/charger_charging.wav")
+        self.aiming_sound = pygame.mixer.Sound("assets/audio/sfx/enemy/charger_aiming.wav")
+
+        self.charge_played = False
+        self.aiming_played = False
+
     @property
     def max_speed(self):
             return self.base_speed * self.speed_multiplier
     @property
     def final_damage(self):
-            return self.base_damage * self.damage_multiplier
+            return self.velocity.length() * self.base_damage
     
     def update(self, player_pos):
         self.current_time = pygame.time.get_ticks()
@@ -662,6 +670,9 @@ class ChargerBoss(Enemy):
         # AIM STATE
         # -------------------
         elif self.state == "aim":
+            if not self.aiming_played:
+                self.aiming_sound.play()
+                self.aiming_played = True
 
             dx = player_pos.x - self.pos.x
             dy = player_pos.y - self.pos.y
@@ -678,6 +689,7 @@ class ChargerBoss(Enemy):
 
             if self.state_timer > 120:
                 self.state = "charge"
+                self.aiming_played = False
                 self.state_timer = 0
                 self.frame = 0
 
@@ -690,13 +702,17 @@ class ChargerBoss(Enemy):
         # CHARGE STATE
         # -------------------
         elif self.state == "charge":
+            if not self.charge_played:
+                self.charging_sound.play()
+                self.charge_played = True
             self.velocity *= 0.99
             self.pos += self.velocity
             if self.state_timer > 60:
                 self.state = "recover"
+                self.charge_played = False
                 self.state_timer = 0
                 self.frame = 0
-        
+
         # -------------------
         # RECOVERY STATE
         # -------------------
@@ -709,6 +725,7 @@ class ChargerBoss(Enemy):
                 angle_step = 360 / bullet_count
 
                 forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
+                self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
