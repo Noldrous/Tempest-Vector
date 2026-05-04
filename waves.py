@@ -98,7 +98,7 @@ class WaveManager:
             enemy = EliteSeekerEnemy(x, y) if is_elite else SeekerEnemy(x, y)
 
         elif enemy_type_roll < 0.6:
-            enemy = EliteShooterEnemy(x, y) if is_elite else EliteShooterEnemy(x, y)
+            enemy = EliteShooterEnemy(x, y) if is_elite else ShooterEnemy(x, y)
 
         else:
             enemy = TeleporterEnemy(x, y)
