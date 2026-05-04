@@ -143,7 +143,7 @@ class Upgrade:
             ["Passive", "Thruster Optimization", "Enhanced thrust output.", load_image_alpha(upgrade_icon_map["Thruster Optimization"])],
             ["Passive", "Faster Reload", "Reload systems optimized.", load_image_alpha(upgrade_icon_map["Faster Reload"])],
             ["Passive", "Damage Boost", "Weapon output amplified.", load_image_alpha(upgrade_icon_map["Damage Boost"])],
-            ["Health", "Health Pack", "Restore 100 HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],
+            ["Health", "Repair Pack", "Restore 50% HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],
             ["Health", "Shield Regen", "Faster shield recovery.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
             ["Ramming", "Reinforced Hull", "Increased RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
             ["Max Ammo", "Ammo Cache", "Ammo reserves expanded.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
@@ -167,7 +167,7 @@ class Upgrade:
         elif upgrade_title == "Thruster Optimization":
             player.max_speed += 2
             player.thrust_power += 0.1
-            
+
         elif upgrade_title == "Faster Reload":
             # Apply to current weapon and all queued weapons
             all_weapons = weapons.queue + [weapons.main]
@@ -176,27 +176,27 @@ class Upgrade:
                     weapon.rate = int(weapon.rate * 0.9)
                     if weapon.rate < 50:
                             weapon.rate = 50
-                            
+
         elif upgrade_title == "Damage Boost":
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon is not None:
                     weapon.damage = int(weapon.damage * 1.5)
-                        
-        elif upgrade_title == "Health Pack":
-                player.health += 100
+
+        elif upgrade_title == "Repair Pack":
+                player.health *= 1.5
                 if player.health > player.max_health:
                     player.health = player.max_health
-                    
+
         elif upgrade_title == "Shield Regen":
                 player.shield_regeneration += 0.05
                 player.shield_regen_delay -= 15
-                
+
         elif upgrade_title == "Reinforced Hull":
                 player.ram_damage *= 1.5
                 player.max_shield += 10
                 player.shield = player.max_shield
-                
+
         elif upgrade_title == "Explosive Shot":
             # Only affects Rockets - increases explosion radius
             all_weapons = weapons.queue + [weapons.main]
@@ -207,7 +207,7 @@ class Upgrade:
                     Rockets.__init__(weapon)
                     weapon.damage = old_damage * 1.5
                     weapon.explosion_radius *= 1.25
-                    
+
         elif upgrade_title == "Shotgun fire rate":
             # Only affects Shotgun - increases spread
             all_weapons = weapons.queue + [weapons.main]

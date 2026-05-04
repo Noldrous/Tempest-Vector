@@ -95,10 +95,10 @@ class WaveManager:
         is_elite = random.random() < elite_chance
 
         if enemy_type_roll < 0.3:
-            enemy = EliteSeekerEnemy(x, y) if is_elite else SeekerEnemy(x, y)
+            enemy = EliteSeekerEnemy(x, y) if is_elite else MotherShip()
 
         elif enemy_type_roll < 0.6:
-            enemy = EliteShooterEnemy(x, y) if is_elite else ShooterEnemy(x, y)
+            enemy = EliteShooterEnemy(x, y) if is_elite else EliteShooterEnemy(x, y)
 
         else:
             enemy = TeleporterEnemy(x, y)

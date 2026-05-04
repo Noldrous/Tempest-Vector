@@ -59,6 +59,8 @@ class Game:
             "skeleton": pygame.mixer.Sound("assets/audio/sfx/skeleton.mp3"),
             "boost": pygame.mixer.Sound("assets/audio/sfx/boost.mp3"),
             "boost2": pygame.mixer.Sound("assets/audio/sfx/boost2.mp3"),
+            "click": pygame.mixer.Sound("assets/audio/sfx/UI/click.wav"),
+            "upgrade": pygame.mixer.Sound("assets/audio/sfx/UI/upgrade.wav"),
         }
 
         self.music = {
@@ -154,6 +156,7 @@ class Game:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if play_rect.collidepoint(mouse) and mouse_buttons[0]:
                         pygame.mixer.music.stop()
+                        self.sfx["click"].play()
                         play_pressed = True
                             
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
@@ -271,10 +274,11 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if resume_rect.collidepoint(mouse):
                         pygame.mixer.music.set_volume(1.0)
+                        self.sfx["click"].play()
                         resume = True
                     if restart_rect.collidepoint(mouse):
                         pygame.mixer.music.stop()
-                        pygame.mixer.music.set_volume(1.0)
+                        self.sfx["click"].play()
                         self.game()
                     if quit_rect.collidepoint(mouse):
                         pygame.quit()
@@ -359,6 +363,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if restart_rect.collidepoint(mouse) and mouse_buttons[0]:
+                        self.sfx["click"].play()
                         self.game()
 
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
@@ -462,6 +467,7 @@ class Game:
                     mouse_pos = pygame.mouse.get_pos()
                     for i, card in enumerate(upgrade_cards):
                         if card.handle_event(event, mouse_pos):
+                            self.sfx["upgrade"].play()
                             Upgrade.apply_upgrade(player, weapons, card.title)
                             print(f"Applied upgrade: {card.title}")
                             upgrade_trigger_time = 0
@@ -475,7 +481,9 @@ class Game:
                 else:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
+                            player.boost_sound.stop()
                             pygame.mixer.music.set_volume(0.5)
+                            self.sfx["click"].play()
                             pause_bg = self.screen.copy()
                             self.pause_menu(pause_bg)
                             

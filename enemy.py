@@ -161,6 +161,8 @@ class ShooterEnemy(Enemy):
         for x in range(self.animation_step["shoot"]):   
             self.animations["shoot"].append(self.sprite_sheet.get_image(x, 1, 25, 27, 1.5))
         
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/enemy/shooter_shoot.wav")
+        
 
     @property
     def max_speed(self):
@@ -192,8 +194,9 @@ class ShooterEnemy(Enemy):
             if self.state_timer % 25 == 0:
                 bullet_pos = self.pos + forward * 15
                 bullet1 = Enemy_Bullet(bullet_pos, forward, self.final_damage, 6)
-        
+                self.shoot_sounds.play()
                 self.bullets.append(bullet1)
+                
 
             strafe = pygame.Vector2(-direction.y, direction.x)
             self.velocity += strafe * 0.98 
@@ -341,8 +344,10 @@ class EliteShooterEnemy(ShooterEnemy):
                 bullet_pos = self.pos + forward * 15
                 if (self.state_timer // 20) % 2 == 0:
                     bullet = Enemy_Bullet(bullet_pos + side * offset, forward, self.final_damage, 4)
+                    self.shoot_sounds.play()
                 else:
                     bullet = Enemy_Bullet(bullet_pos - side * offset, forward, self.final_damage, 4)
+                    self.shoot_sounds.play()
 
                 self.bullets.append(bullet)
 
@@ -421,7 +426,7 @@ class EliteShooterEnemy(ShooterEnemy):
 class TeleporterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 90
+        self.health = 125
         self.base_damage = 6
         self.base_speed = 100
         self.hit_radius = 30
@@ -455,7 +460,10 @@ class TeleporterEnemy(Enemy):
             self.animations["teleport"].append(self.sprite_sheet.get_image(x, 0, 66, 66, 0.8))
         for x in range(8):
             self.animations["shoot"].append(self.sprite_sheet.get_image(x, 0, 66, 66, 0.8))
-        
+
+        self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/enemy/teleporter_shoot.wav")
+        self.teleport_sounds = pygame.mixer.Sound("assets/audio/sfx/enemy/teleporter_teleport.wav")
+        self.teleport_played = False
 
     @property
     def max_speed(self):
@@ -486,7 +494,7 @@ class TeleporterEnemy(Enemy):
                 angle_step = 360 / bullet_count
 
                 forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
-
+                self.shoot_sounds.play()
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
 
@@ -515,6 +523,7 @@ class TeleporterEnemy(Enemy):
                 self.state = "teleport"
                 self.state_timer = 0
                 self.frame = 0
+                self.teleport_played = False
                 self.target_pos = pygame.Vector2(
                     random.randint(100, width - 100),
                     random.randint(100, height - 100)
@@ -532,6 +541,9 @@ class TeleporterEnemy(Enemy):
             if distance > blink_speed:
                 direction = direction.normalize()
                 self.pos += direction * blink_speed
+                if not self.teleport_played:
+                    self.teleport_sounds.play()
+                    self.teleport_played = True        
             else:
                 if self.state_timer > 50:
                     self.state = "shoot"
@@ -749,6 +761,10 @@ class MotherShip(Enemy):
         self.shoot_timer1 = 0
         self.shoot_timer2 = 0
 
+        self.float_timer = 0
+        self.float_amplitude = 25
+        self.float_speed = 0.05
+
         self.spawn_timer = 0
         self.alpha = 0
         self.active = False
@@ -765,6 +781,8 @@ class MotherShip(Enemy):
         # simple animation (adjust if you have more frames)
         for x in range(76):
             self.animation_list.append(self.sprite_sheet.get_image(x, 0, 256, 256, 0.8))
+
+        self.shoot_sound = pygame.mixer.Sound("assets/audio/sfx/enemy/mothership_shoot.wav")
 
     @property
     def max_speed(self):
@@ -793,6 +811,7 @@ class MotherShip(Enemy):
             
             self.active = True
 
+        self.float_timer += 1
         self.state_timer += 1
 
         if self.state_timer >= 1000:
@@ -805,6 +824,7 @@ class MotherShip(Enemy):
             if self.shoot_timer % 5 == 0: 
                 bullet_count = 8
                 angle_step = 360 / bullet_count
+                self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle + i * angle_step)
@@ -817,6 +837,7 @@ class MotherShip(Enemy):
             if self.shoot_timer % 5 == 0:
                 bullet_count = 8
                 angle_step = 360 / bullet_count
+                self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle + i * angle_step)
@@ -829,6 +850,7 @@ class MotherShip(Enemy):
             if self.shoot_timer1 % 20 == 0: 
                 bullet_count = 4
                 angle_step = 360 / bullet_count
+                self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle1 + i * angle_step)
@@ -840,6 +862,7 @@ class MotherShip(Enemy):
             if self.shoot_timer2 % 10 == 0:
                 bullet_count = 4
                 angle_step = 360 / bullet_count
+                self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle2 + i * angle_step)
@@ -850,9 +873,10 @@ class MotherShip(Enemy):
             bullet.update()
 
     def draw(self, screen):
+        float_offset = math.sin(self.float_timer * self.float_speed) * self.float_amplitude
         image = self.animation_list[self.frame].copy()
         image.set_alpha(self.alpha)
-        rect = image.get_rect(center=self.pos)
+        rect = image.get_rect(center=(self.pos.x, self.pos.y + float_offset))
         screen.blit(image, rect.topleft)
 
         for bullet in self.bullets:
