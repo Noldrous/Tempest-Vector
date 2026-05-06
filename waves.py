@@ -74,10 +74,16 @@ class WaveManager:
         if self.is_boss_wave:
             boss_roll = random.random()
 
-            if boss_roll < 0.5:
-                enemy = ChargerBoss(x, y)
-            else:
-                enemy = MotherShip()
+            if self.current_wave < 11: 
+                enemy = ChargerBoss(x, y) 
+            elif self.current_wave < 21: 
+                enemy = MotherShip() 
+            else: 
+                boss_roll = random.random() 
+                if boss_roll < 0.5: 
+                    enemy = ChargerBoss(x, y) 
+                else: 
+                    enemy = MotherShip()
 
             enemy.speed_multiplier = self.speed_multiplier
             enemy.damage_multiplier = self.damage_multiplier

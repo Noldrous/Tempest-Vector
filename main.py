@@ -15,7 +15,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.sfont = pygame.font.Font("assets/font/black-and-white.ttf", 20)
         self.mfont = pygame.font.Font("assets/font/black-and-white.ttf", 35)
-        self.lfont = pygame.font.Font("assets/font/VCR.ttf", 80)
+        self.svcfont = pygame.font.Font("assets/font/VCR.ttf", 20)
+        self.lvcfont = pygame.font.Font("assets/font/VCR.ttf", 80)
         self.running = True
         
         self.assets = {
@@ -30,10 +31,8 @@ class Game:
             "title": load_image_alpha('ui/title.png'),
             "play_button1": load_image_alpha('ui/button_play.png'),
             "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
-            "credits_button1": load_image_alpha('ui/button_credits.png'),
-            "credits_button2": load_image_alpha('ui/hoveredButton_credits.png'),
-            "quit_button1": load_image_alpha('ui/exit_button.png'),
-            "quit_button2": load_image_alpha('ui/sad.png'),
+            "quit_button1": load_image_alpha('ui/button_quit.png'),
+            "quit_button2": load_image_alpha('ui/hoveredButton_quit.png'),
             "resume_button1": load_image_alpha('ui/resume1.png'),
             "resume_button2": load_image_alpha('ui/resume2.png'),
             "restart_button1": load_image_alpha('ui/restart1.png'),
@@ -78,7 +77,8 @@ class Game:
             "celestial3": 0,
         }
         self.background = pygame.transform.scale(self.assets["background"], (self.width, self.height))
-        self.sway_time = 0
+
+        self.score = 0
 
     def setbackground(self, key, speed, pos1, pos2, pos3):
         bg = self.assets[key]
@@ -99,10 +99,8 @@ class Game:
         title = pygame.transform.scale(self.assets["title"], (self.width // 1.6, self.height // 2.5))
         play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))
         play2 = pygame.transform.scale(self.assets["play_button2"], (self.width // 8, self.height // 14))
-        credits1 = pygame.transform.scale(self.assets["credits_button1"], (self.width // 8, self.height // 14))
-        credits2 = pygame.transform.scale(self.assets["credits_button2"], (self.width // 8, self.height // 14))
-        quit1 = self.assets["quit_button1"]
-        quit2 = self.assets["quit_button2"]
+        quit1 = pygame.transform.scale(self.assets["quit_button1"], (self.width // 8, self.height // 14))
+        quit2 = pygame.transform.scale(self.assets["quit_button2"], (self.width // 8, self.height // 14))
 
         sprite_sheet = SpriteSheet(self.assets["player_ship"])
         menu_frames = []
@@ -120,8 +118,7 @@ class Game:
         ship = pygame.transform.rotate(ship, -90)
         
         play_rect = play1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 5))
-        credit_rect = credits1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
-        quit_rect = quit1.get_rect(topright=(self.width - 50, 50))
+        quit_rect = quit1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
         title_rect = title.get_rect(topleft=(50, 50))
 
         play_pressed = False
@@ -141,9 +138,11 @@ class Game:
         pygame.mixer.music.play(-1)
         boost_played = False
 
+        sway_time = 0
+
         while True:
             dt = self.clock.tick(60) / 1000.0   
-            self.sway_time += dt
+            sway_time += dt
             mouse = pygame.mouse.get_pos()
             
             for event in pygame.event.get():
@@ -170,7 +169,6 @@ class Game:
                 star1_speed = 8
                 star2_speed = 6
                 play_rect.x += 15
-                credit_rect.x += 15
                 quit_rect.x += 15
                 title_rect.x -= 25
 
@@ -186,7 +184,6 @@ class Game:
             self.screen.blit(self.background, (0, 0))
 
             play_button = play2 if play_rect.collidepoint(mouse) else play1
-            credits_button = credits2 if credit_rect.collidepoint(mouse) else credits1
             quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
             
             self.setbackground("shadow1", shadow1_speed, 0, 360, 720)
@@ -197,10 +194,10 @@ class Game:
             self.setbackground("star1", star1_speed, 0, 360, 720)
             self.setbackground("star2", star2_speed, 0, 360, 720)
             
-            self.sway_time += dt
+            sway_time += dt
 
-            offset_x = math.sin(self.sway_time * 2) * 10
-            offset_y = math.cos(self.sway_time * 1.5) * 30
+            offset_x = math.sin(sway_time * 2) * 10
+            offset_y = math.cos(sway_time * 1.5) * 30
 
             ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
 
@@ -235,7 +232,6 @@ class Game:
             self.screen.blit(title, title_rect)
 
             self.screen.blit(play_button, play_rect)
-            self.screen.blit(credits_button, credit_rect)
             self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
@@ -279,6 +275,7 @@ class Game:
                     if restart_rect.collidepoint(mouse):
                         pygame.mixer.music.stop()
                         self.sfx["click"].play()
+                        self.score = 0
                         self.game()
                     if quit_rect.collidepoint(mouse):
                         pygame.quit()
@@ -302,9 +299,9 @@ class Game:
             self.screen.blit(overlay, (0, 0))
 
             panel_rect = pygame.Rect(panel_x, 0, panel_width, self.height)
-            pygame.draw.rect(self.screen, (20, 20, 20), panel_rect)
+            pygame.draw.rect(self.screen, (20, 20, 50), panel_rect)
             
-            pygame.draw.rect(self.screen, "darkgray", (panel_x, 0, 300, 100), 35) 
+            pygame.draw.rect(self.screen, "darkgray", (panel_x, 0, 300, 100), 35)
             pygame.draw.rect(self.screen, "darkgray", (panel_x + 10, 0, 60, 100)) 
             pygame.draw.rect(self.screen, "darkgray", (panel_x + 230, 0, 60, 100))
             pygame.draw.rect(self.screen, (255, 255, 255), (panel_x, 0, 300, 100), 5) 
@@ -339,11 +336,13 @@ class Game:
         restart2 = pygame.transform.scale(self.assets["over_restart2"], (200, 60))
         quit1 = pygame.transform.scale(self.assets["over_quit1"], (200, 60))
         quit2 = pygame.transform.scale(self.assets["over_quit2"], (200, 60))
-        skull1 = pygame.transform.scale(self.assets["skull1"], (350,350))
-        skull2 = pygame.transform.scale(self.assets["skull2"], (350,350))
-        game_over_text = self.lfont.render("[-_-] YOU ARE DEAD [-_-]", False, "darkgray")
+        skull1 = pygame.transform.scale(self.assets["skull1"], (self.width//4,self.width//4))
+        skull2 = pygame.transform.scale(self.assets["skull2"], (self.width//4,self.width//4))
+        game_over_text = self.lvcfont.render("[-_-] YOU ARE DEAD [-_-]", False, "white")
+        score_text = self.svcfont.render(f"SCORE: {self.score}", False, "white")
 
         text_rect = game_over_text.get_rect(center=(self.width//2, 60))
+        score_rect = score_text.get_rect(center=(self.width//2, 120))
         restart_rect = restart1.get_rect(center=(self.width//2, self.height - 180))
         quit_rect = quit1.get_rect(center=(self.width//2, self.height - 100))
         skull_rect = skull1.get_rect(center=(self.width//2, self.height//2 - 75))
@@ -364,6 +363,7 @@ class Game:
                     mouse_buttons = pygame.mouse.get_pressed()
                     if restart_rect.collidepoint(mouse) and mouse_buttons[0]:
                         self.sfx["click"].play()
+                        self.score = 0
                         self.game()
 
                     if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
@@ -397,6 +397,7 @@ class Game:
                 timer=0
 
             self.screen.blit(game_over_text, text_rect)
+            self.screen.blit(score_text, score_rect)
             self.screen.blit(restart_button, restart_rect)
             self.screen.blit(quit_button, quit_rect)
             self.screen.blit(skull, skull_rect)
@@ -564,7 +565,10 @@ class Game:
             ammo_text = player.weapon.ammo if player.weapon else 0
             current_wave = wave_manager.current_wave
             status_text = self.sfont.render(f"Wave: {current_wave} | {weapon_name} Ammo: {ammo_text}", False, "white")
+            score_text = self.sfont.render(f"Score: {self.score}", False, "white")
+            score_rect = score_text.get_rect(topright=(self.width - 20, 20))
             ui_surface.blit(status_text, (20, 20))
+            ui_surface.blit(score_text, score_rect)
 
             # Display "changing weapon" message if cycling
             if weapons.should_show_message():
@@ -605,7 +609,8 @@ class Game:
             # Remove dead enemies
             for enemy in all_enemies[:]:
                 if enemy.health <= 0:
-                # Create explosion animation at enemy position
+                    self.score += enemy.killed_score
+                    # Create explosion animation at enemy position
                     explosion = EnemyExplosion(int(enemy.pos.x), int(enemy.pos.y), enemy.hit_radius)
                     explosion_group.add(explosion)
                     self.sfx["explosion"].play()
@@ -678,7 +683,7 @@ class Game:
                 # Fade title
                 title_surface = self.sfont.render("CHOOSE UPGRADE", True, (255, 255, 255))
                 title_surface.set_alpha(upgrade_fade_alpha)
-                title_rect = title_surface.get_rect(center=(self.width//2, self.height))
+                title_rect = title_surface.get_rect(center=(self.width//2, self.height - 25))
                 self.screen.blit(title_surface, title_rect)
 
                 # Update and draw cards (cards have their own pop-up animation)

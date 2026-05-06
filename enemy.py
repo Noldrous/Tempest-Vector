@@ -34,7 +34,7 @@ class Enemy_Bullet:
 
     def draw(self, screen):
         pygame.draw.circle(screen, (255, 255, 255), (int(self.pos.x), int(self.pos.y)), self.radius)
-        pygame.draw.circle(screen, (44, 255, 5), (int(self.pos.x), int(self.pos.y)), self.radius, 2)
+        pygame.draw.circle(screen, (120, 0, 255) , (int(self.pos.x), int(self.pos.y)), self.radius, 4)
 
 class SeekerEnemy(Enemy):
     def __init__(self, x, y):
@@ -43,8 +43,10 @@ class SeekerEnemy(Enemy):
         self.base_damage = 10
         self.base_speed = 3
         self.hit_radius = 30
+        self.killed_score = 10
+
         self.angle = 0
-        self.turn_speed = 0.3
+        self.turn_speed = 0.4
 
         self.sprite_sheet_image = load_image_alpha("enemies/seeker.png")
         self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
@@ -106,6 +108,8 @@ class EliteSeekerEnemy(SeekerEnemy):
         self.base_damage = 12
         self.base_speed = 4
         self.hit_radius = 30
+        self.killed_score = 20
+
         self.angle = 0
         self.turn_speed = 0.2
 
@@ -126,6 +130,8 @@ class ShooterEnemy(Enemy):
         self.base_damage = 5
         self.base_speed = 2
         self.hit_radius = 40
+        self.killed_score = 10
+
         self.angle = 0
         self.turn_speed = 0.09
 
@@ -287,6 +293,8 @@ class EliteShooterEnemy(ShooterEnemy):
         self.base_damage = 4
         self.base_speed = 2
         self.hit_radius = 40
+        self.killed_score = 20
+
         self.angle = 0
         self.turn_speed = 0.09
 
@@ -430,6 +438,8 @@ class TeleporterEnemy(Enemy):
         self.base_damage = 6
         self.base_speed = 100
         self.hit_radius = 30
+        self.killed_score = 15
+
         self.angle = 0
 
         self.state = "teleport"
@@ -568,11 +578,11 @@ class TeleporterEnemy(Enemy):
 class ChargerBoss(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-
         self.health = 5000
         self.base_damage = 1.5
         self.base_speed = 3
         self.hit_radius = 90
+        self.killed_score = 50
 
         self.angle = 0
         self.turn_speed = 0.05
@@ -761,11 +771,11 @@ class ChargerBoss(Enemy):
 class MotherShip(Enemy):
     def __init__(self):
         super().__init__(width // 2, height // 2)
-
         self.health = 8000
         self.base_damage = 10
         self.base_speed = 0
         self.hit_radius = 90
+        self.killed_score = 75
 
         self.angle = 0
         self.angle1 = 0
