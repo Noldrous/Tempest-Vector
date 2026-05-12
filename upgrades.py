@@ -193,8 +193,8 @@ class Upgrade:
                 player.shield_regen_delay -= 15
 
         elif upgrade_title == "Reinforced Hull":
-                player.ram_damage *= 1.5
-                player.max_shield += 10
+                player.ram_damage *= 1.25
+                player.max_shield += 15
                 player.shield = player.max_shield
 
         elif upgrade_title == "Explosive Shot":

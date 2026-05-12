@@ -10,7 +10,7 @@ class WaveManager:
         self.all_enemies = []
 
         self.base_count = 3
-        self.spawn_interval = 1.5
+        self.spawn_interval = 2.0
         self.setup_wave()
         
         self.wave_complete = False
@@ -100,10 +100,10 @@ class WaveManager:
 
         is_elite = random.random() < elite_chance
 
-        if enemy_type_roll < 0.3:
+        if enemy_type_roll < 0.4:
             enemy = EliteSeekerEnemy(x, y) if is_elite else SeekerEnemy(x, y)
 
-        elif enemy_type_roll < 0.6:
+        elif enemy_type_roll < 0.8:
             enemy = EliteShooterEnemy(x, y) if is_elite else ShooterEnemy(x, y)
 
         else:

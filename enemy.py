@@ -128,7 +128,7 @@ class ShooterEnemy(Enemy):
         super().__init__(x, y)
         self.health = 75
         self.base_damage = 5
-        self.base_speed = 2
+        self.base_speed = 3
         self.hit_radius = 40
         self.killed_score = 10
 
@@ -205,10 +205,10 @@ class ShooterEnemy(Enemy):
                 
 
             strafe = pygame.Vector2(-direction.y, direction.x)
-            self.velocity += strafe * 0.98 
+            self.velocity += strafe 
 
-            if self.velocity.length() > self.max_speed:
-                self.velocity.scale_to_length(self.max_speed)
+            if self.velocity.length() > 1:
+                self.velocity.scale_to_length(1)
 
             total_velocity = self.velocity + self.knockback
             self.pos += total_velocity
@@ -257,7 +257,7 @@ class ShooterEnemy(Enemy):
 
             distance = self.pos.distance_to(self.target_pos)
 
-            if distance < 10:
+            if distance < 10 or self.state_timer > 150:
                 self.state = "shoot"
                 self.state_timer = 0
                 self.frame = 0
@@ -291,7 +291,7 @@ class EliteShooterEnemy(ShooterEnemy):
         super().__init__(x, y)
         self.health = 150
         self.base_damage = 4
-        self.base_speed = 2
+        self.base_speed = 4
         self.hit_radius = 40
         self.killed_score = 20
 
@@ -360,17 +360,17 @@ class EliteShooterEnemy(ShooterEnemy):
                 self.bullets.append(bullet)
 
             strafe = pygame.Vector2(-direction.y, direction.x)
-            self.velocity += strafe * 0.98 
+            self.velocity += strafe
 
-            if self.velocity.length() > self.max_speed:
-                self.velocity.scale_to_length(self.max_speed)
+            if self.velocity.length() > 2:
+                self.velocity.scale_to_length(2)
 
             total_velocity = self.velocity + self.knockback
             self.pos += total_velocity
             self.knockback *= self.knockback_decay
 
             # transition
-            if self.state_timer > 200:
+            if self.state_timer > 100:
                 self.state = "move"
                 self.state_timer = 0
                 self.target_pos = pygame.Vector2(
@@ -411,7 +411,7 @@ class EliteShooterEnemy(ShooterEnemy):
 
             distance = self.pos.distance_to(self.target_pos)
 
-            if distance < 10:
+            if distance < 10 or self.state_timer > 200:
                 self.state = "shoot"
                 self.state_timer = 0
 
@@ -578,8 +578,8 @@ class TeleporterEnemy(Enemy):
 class ChargerBoss(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 5000
-        self.base_damage = 1.5
+        self.health = 6000
+        self.base_damage = 1.25
         self.base_speed = 3
         self.hit_radius = 90
         self.killed_score = 50

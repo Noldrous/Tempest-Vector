@@ -16,7 +16,7 @@ class Player:
         self.shield_regen_delay = 240
         self.last_damage_timer = 0
 
-        self.ram_damage = 4
+        self.ram_damage = 10
         self.thrust_power = 0.2
         self.max_speed = 9
 
@@ -234,9 +234,9 @@ class Player:
                 self.shoot_timer = self.shoot_anim_duration
 
                 recoil_strength = {
-                    "Machine Gun": 1,
+                    "Machine Gun": 0.5,
                     "Shotgun": 5,
-                    "Rail Gun": 6,
+                    "Rail Gun": 3,
                     "Rockets": 8
                 }
 

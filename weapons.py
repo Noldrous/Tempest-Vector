@@ -193,7 +193,7 @@ class MachineGun(Weapon):
             ammo=50,
             rate=90,
             damage=10,
-            bullet_size=4,
+            bullet_size=6,
             spread=7,
             bullet_count=3,
             bullet_lifetime=90,
@@ -208,7 +208,7 @@ class Shotgun(Weapon):
             ammo=10,
             rate=800,
             damage=40,
-            bullet_size=6,
+            bullet_size=8,
             spread=50,
             bullet_count=8,
             bullet_lifetime=17,
@@ -219,11 +219,11 @@ class RailGun(Weapon):
     def __init__(self):
         super().__init__(
             name='Rail Gun',
-            bullet_speed=100,
+            bullet_speed=75,
             ammo=7,
             rate=700,
-            damage=75,
-            bullet_size=10,
+            damage=100,
+            bullet_size=11,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
@@ -236,10 +236,10 @@ class Rockets(Weapon):
         super().__init__(
             name='Rockets',
             bullet_speed=50,
-            ammo=4,
+            ammo=3,
             rate=1000,
             damage=200,
-            bullet_size=15,
+            bullet_size=16,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
@@ -262,7 +262,7 @@ class Weapons:
             'Machine Gun': 50,
             'Shotgun': 10,
             'Rail Gun': 7,
-            'Rockets': 6
+            'Rockets': 3
         }
 
     def can_cycle_weapon(self):
