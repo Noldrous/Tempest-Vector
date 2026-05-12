@@ -10,7 +10,7 @@ class WaveManager:
         self.all_enemies = []
 
         self.base_count = 3
-        self.spawn_interval = 2.0
+        self.spawn_interval = 1.75
         self.setup_wave()
         
         self.wave_complete = False
@@ -31,7 +31,7 @@ class WaveManager:
         if self.is_boss_wave:
             self.enemy_count = 1  
         else:
-            self.enemy_count = int(self.base_count * (1.25 ** self.current_wave))
+            self.enemy_count = min(int(self.base_count * (1.225 ** self.current_wave)), 67)
 
         self.spawn_interval = max(0.25, self.spawn_interval - self.current_wave * 0.003)
         self.speed_multiplier = 1.035 ** self.current_wave
@@ -72,8 +72,6 @@ class WaveManager:
         x, y = random.choice(spawn_locations)
 
         if self.is_boss_wave:
-            boss_roll = random.random()
-
             if self.current_wave < 11: 
                 enemy = ChargerBoss(x, y) 
             elif self.current_wave < 21: 
@@ -111,7 +109,7 @@ class WaveManager:
 
         enemy.speed_multiplier = self.speed_multiplier
         enemy.damage_multiplier = self.damage_multiplier
-        enemy.health *= (1.2 ** (self.current_wave // 10))
+        enemy.health *= (1.2 ** (self.current_wave // 5))
 
         self.all_enemies.append(enemy)
 
