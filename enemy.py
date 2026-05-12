@@ -585,7 +585,7 @@ class ChargerBoss(Enemy):
         super().__init__(x, y)
         self.max_health = 14000
         self.health = self.max_health
-        self.base_damage = 1.25
+        self.base_damage = 1.4
         self.base_speed = 3
         self.hit_radius = 90
         self.killed_score = 50

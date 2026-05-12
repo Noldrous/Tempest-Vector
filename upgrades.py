@@ -158,10 +158,10 @@ class Upgrade:
     
     def apply_upgrade(player, weapons, upgrade_title):
         if upgrade_title == "Vitality Boost":
-            player.max_health += 50
+            player.max_health *= 1.2
 
         elif upgrade_title == "Fortified Shield":
-            player.max_shield += 50
+            player.max_shield *= 1.4
             player.shield = player.max_shield
 
         elif upgrade_title == "Thruster Optimization":
@@ -214,6 +214,7 @@ class Upgrade:
             for weapon in all_weapons:
                 if weapon.name == "Shotgun":
                     weapon.rate += -100
+                    weapon.bullet_count += 2
                     if weapon.rate < 100:
                         weapon.rate = 100
                     print(f"Shotgun spread increased to {weapon.spread}")
