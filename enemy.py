@@ -39,7 +39,8 @@ class Enemy_Bullet:
 class SeekerEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 100
+        self.max_health = 100
+        self.health = self.max_health
         self.base_damage = 10
         self.base_speed = 3
         self.hit_radius = 30
@@ -104,7 +105,8 @@ class SeekerEnemy(Enemy):
 class EliteSeekerEnemy(SeekerEnemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 175
+        self.max_health = 175
+        self.health = self.max_health
         self.base_damage = 12
         self.base_speed = 4
         self.hit_radius = 30
@@ -126,7 +128,8 @@ class EliteSeekerEnemy(SeekerEnemy):
 class ShooterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 75
+        self.max_health = 75
+        self.health = self.max_health
         self.base_damage = 5
         self.base_speed = 3
         self.hit_radius = 40
@@ -289,7 +292,8 @@ class ShooterEnemy(Enemy):
 class EliteShooterEnemy(ShooterEnemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 150
+        self.max_health = 150
+        self.health = self.max_health
         self.base_damage = 4
         self.base_speed = 4
         self.hit_radius = 40
@@ -434,7 +438,8 @@ class EliteShooterEnemy(ShooterEnemy):
 class TeleporterEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 125
+        self.max_health = 125
+        self.health = self.max_health
         self.base_damage = 6
         self.base_speed = 100
         self.hit_radius = 30
@@ -578,7 +583,8 @@ class TeleporterEnemy(Enemy):
 class ChargerBoss(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.health = 6000
+        self.max_health = 14000
+        self.health = self.max_health
         self.base_damage = 1.25
         self.base_speed = 3
         self.hit_radius = 90
@@ -660,7 +666,7 @@ class ChargerBoss(Enemy):
 
             if distance > 5:
                 direction = direction.normalize()
-                self.pos += direction * 4  # entry speed (adjust feel here)
+                self.pos += direction * 15  # entry speed (adjust feel here)
             else:
                 self.state = "aim"
                 self.state_timer = 0
@@ -768,10 +774,21 @@ class ChargerBoss(Enemy):
         for bullet in self.bullets:
             bullet.draw(screen)
 
+        bar_width = 700
+        bar_height = 25
+        bar_x = (width - bar_width) // 2
+        bar_y = 75
+        health_ratio = self.health / self.max_health
+        current_width = bar_width * health_ratio
+        pygame.draw.rect(screen, (60, 0, 0), (bar_x, bar_y, bar_width, bar_height), border_radius=10)
+        pygame.draw.rect(screen, (255, 40, 40), (bar_x, bar_y, current_width, bar_height), border_radius=10)
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 3, border_radius=10)
+
 class MotherShip(Enemy):
     def __init__(self):
         super().__init__(width // 2, height // 2)
-        self.health = 8000
+        self.max_health = 15000
+        self.health = self.max_health
         self.base_damage = 10
         self.base_speed = 0
         self.hit_radius = 90
@@ -795,7 +812,7 @@ class MotherShip(Enemy):
         self.spawn_timer = 0
         self.alpha = 0
         self.active = False
-        self.intro_duration = 180  # ~3 seconds at 60 FPS
+        self.intro_duration = 120  
 
         self.sprite_sheet_image = load_image_alpha("enemies/mothership.png")
         self.sprite_sheet = spritesheet.SpriteSheet(self.sprite_sheet_image)
@@ -908,3 +925,13 @@ class MotherShip(Enemy):
 
         for bullet in self.bullets:
             bullet.draw(screen)
+
+        bar_width = 700
+        bar_height = 25
+        bar_x = (width - bar_width) // 2
+        bar_y = 75
+        health_ratio = self.health / self.max_health
+        current_width = bar_width * health_ratio
+        pygame.draw.rect(screen, (60, 0, 0), (bar_x, bar_y, bar_width, bar_height), border_radius=10)
+        pygame.draw.rect(screen, (255, 40, 40), (bar_x, bar_y, current_width, bar_height), border_radius=10)
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 3, border_radius=10)

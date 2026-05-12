@@ -219,7 +219,7 @@ class RailGun(Weapon):
     def __init__(self):
         super().__init__(
             name='Rail Gun',
-            bullet_speed=75,
+            bullet_speed=125,
             ammo=7,
             rate=700,
             damage=100,
@@ -235,7 +235,7 @@ class Rockets(Weapon):
     def __init__(self):
         super().__init__(
             name='Rockets',
-            bullet_speed=50,
+            bullet_speed=75,
             ammo=3,
             rate=1000,
             damage=200,

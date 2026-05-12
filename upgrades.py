@@ -181,7 +181,7 @@ class Upgrade:
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon is not None:
-                    weapon.damage = int(weapon.damage * 1.5)
+                    weapon.damage = int(weapon.damage * 1.35)
 
         elif upgrade_title == "Repair Pack":
                 player.health += (player.max_health//2)
@@ -193,7 +193,7 @@ class Upgrade:
                 player.shield_regen_delay -= 15
 
         elif upgrade_title == "Reinforced Hull":
-                player.ram_damage *= 1.25
+                player.ram_damage *= 1.5
                 player.max_shield += 15
                 player.shield = player.max_shield
 
@@ -205,8 +205,8 @@ class Upgrade:
                     # Increase explosion by recreating (temporary hack)
                     old_damage = weapon.damage
                     Rockets.__init__(weapon)
-                    weapon.damage = old_damage * 1.5
-                    weapon.explosion_radius *= 1.25
+                    weapon.damage = old_damage * 1.2
+                    weapon.explosion_radius *= 1.5
 
         elif upgrade_title == "Shotgun fire rate":
             # Only affects Shotgun - increases spread
@@ -225,7 +225,7 @@ class Upgrade:
                 if weapon.name == "Rail Gun":
                     if weapon is not None:
                         weapon.bullet_piercing = True
-                        weapon.damage = int(weapon.damage * 1.25)
+                        weapon.damage = int(weapon.damage * 1.2)
 
         elif upgrade_title == "Ammo Cache":
             weapons.max_ammo_bonus = int(weapons.max_ammo_bonus * 1.25)
