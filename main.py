@@ -62,6 +62,13 @@ class Game:
             "upgrade": pygame.mixer.Sound("assets/audio/sfx/UI/upgrade.wav"),
         }
 
+        self.announcer = {
+            "Machine Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_machinegun.wav"),
+            "Rail Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_railgun.wav"),
+            "Shotgun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_shotgun.wav"),
+            "Rockets": pygame.mixer.Sound("assets/audio/sfx/player/announcer_rocket.wav"),
+        }
+
         self.music = {
             "menu": "assets/audio/music/menu_music.mp3",
             "game": "assets/audio/music/game_music.mp3"
@@ -176,7 +183,6 @@ class Game:
                 if not boost_played:
                     self.sfx["boost"].play()
                     boost_played = True
-
 
                 if ship_base_x + ship_move_x > self.width + 500:
                     self.game()
@@ -447,6 +453,7 @@ class Game:
 
         boost_played = False
         music_started = False
+        announcer_played = False
 
         while True:
             dt = self.clock.tick(60) / 1000.0
@@ -533,8 +540,12 @@ class Game:
 
             # weapon swap check
             if player.weapon.ammo <= 0:
+                announcer_played = False
                 weapons.cycle_weapon()
                 player.weapon = weapons.main
+                if not announcer_played:
+                    self.announcer[weapons.main.name].play() 
+                    announcer_played = True
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)
@@ -633,6 +644,10 @@ class Game:
                                 self.sfx["explosion"].play()
                             if bullet.piercing == False:
                                 player_bullets.remove(bullet)
+                            if bullet.piercing == True:
+                                bullet.pierce_level -= 1
+                                if bullet.pierce_level <= 0:
+                                    player_bullets.remove(bullet)
                         break
 
             # Enemy bullets hit player

@@ -43,7 +43,7 @@ def load_bullet_sheets():
 
 
 class Bullet:
-    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, explosion_radius=0, is_homing=False, seek_range=1000,image=None, weapon_name='Machine Gun'):
+    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, pierce_level=0, explosion_radius=0, is_homing=False, seek_range=1000,image=None, weapon_name='Machine Gun'):
         self.pos = pygame.Vector2(x, y)
         self.start_pos = pygame.Vector2(x, y)
         self.angle = angle
@@ -52,6 +52,7 @@ class Bullet:
         self.lifetime = lifetime
         self.damage = damage
         self.piercing = bullet_piercing
+        self.pierce_level = pierce_level
         self.max_distance = max_distance
         self.explosion_radius = explosion_radius
         self.is_homing = is_homing
@@ -136,7 +137,7 @@ class Bullet:
         return True
     
 class Weapon:
-    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False, explosion_radius=0):
+    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False, pierce_level=0, explosion_radius=0):
         self.name = name
         self.bullet_speed =  bullet_speed
         self.ammo = ammo
@@ -148,6 +149,7 @@ class Weapon:
         self.bullet_lifetime = bullet_lifetime
         self.bullet_range = bullet_range if bullet_range is not None else bullet_speed * bullet_lifetime
         self.bullet_piercing = bullet_piercing
+        self.pierce_level = pierce_level
         self.explosion_radius = explosion_radius
         self.last_shot = 0
 
@@ -179,6 +181,7 @@ class Weapon:
                 self.damage,
                 max_distance=self.bullet_range,
                 bullet_piercing = self.bullet_piercing,
+                pierce_level = self.pierce_level,
                 explosion_radius=self.explosion_radius,
                 is_homing=(self.name == "Rockets"),
                 weapon_name=self.name
@@ -219,15 +222,16 @@ class RailGun(Weapon):
     def __init__(self):
         super().__init__(
             name='Rail Gun',
-            bullet_speed=125,
+            bullet_speed=80,
             ammo=7,
             rate=700,
             damage=100,
-            bullet_size=11,
+            bullet_size=15,
             spread=0,
             bullet_count=1,
             bullet_lifetime=100,
-            bullet_piercing=False
+            bullet_piercing=False,
+            pierce_level=0
         )
         self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/railgun.mp3")
 
@@ -235,7 +239,7 @@ class Rockets(Weapon):
     def __init__(self):
         super().__init__(
             name='Rockets',
-            bullet_speed=75,
+            bullet_speed=40,
             ammo=3,
             rate=1000,
             damage=200,

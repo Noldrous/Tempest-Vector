@@ -7,11 +7,11 @@ class Player:
         self.ship_pos = pygame.Vector2(width//2, height // 2 + 500)
         self.ship_radius = 16
 
-        self.health = 200
-        self.max_health = 200
+        self.health = 100
+        self.max_health = 100
 
-        self.shield = 100
-        self.max_shield = 100
+        self.shield = 50
+        self.max_shield = 50
         self.shield_regeneration = 1
         self.shield_regen_delay = 240
         self.last_damage_timer = 0
@@ -44,7 +44,7 @@ class Player:
         self.scale = 1.5
         self.frame_count = 12
 
-        for row in range(12):  # your full table
+        for row in range(12):  
             row_frames = []
             for i in range(self.frame_count):
                 row_frames.append(self.sprite_sheet.get_image(i, row,self.frame_width, self.frame_height, self.scale))
@@ -58,9 +58,9 @@ class Player:
         return self.velocity.length() * self.ram_damage
     
     def get_damage_state(self):
-        if self.health > 120:
+        if self.health > self.max_health * 0.60:
             return 0  # no damage
-        elif self.health > 50:
+        elif self.health > self.max_health * 0.30:
             return 1  # light damage
         else:
             return 2  # heavy damage
@@ -138,7 +138,7 @@ class Player:
             thrust = pygame.Vector2(math.cos(angle), math.sin(angle))
             self.velocity += thrust * self.thrust_power
 
-            # 🔊 Start boost sound (loop)
+            #Start boost sound (loop)
             if not self.boost_sound_playing:
                 self.boost_sound.play(-1)
                 self.boost_sound_playing = True

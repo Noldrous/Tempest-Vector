@@ -10,21 +10,18 @@ CARD_SPACING = 35
 ANIMATION_DURATION = 1500
 
 upgrade_icon_map = {
-    "Shotgun fire rate": "icons/sawed-off-shotgun.png",
+    "Shotgun fire rate": "icons/shotgun-rounds.png",
     "Piercing Shot": "icons/piercing_shot.png",
     "Explosive Shot": "icons/explosion.png",
     "Increased Health": "icons/health_increase.png",
-    "Faster Reload": "icons/reload.png",
+    "Faster Rate of Fire": "icons/fire_rate.png",
     "Damage Boost": "icons/damage_upgrade.png",
-    "Health Pack": "icons/heal.png",
     "Shield Regen": "icons/armor-upgrade.png",
     "Reinforced Hull": "icons/ram-profile.png",
     "Ammo Cache": "icons/ammo-box.png",
     "Fortified Shield": "icons/bordered-shield.png",
     "Thruster Optimization": "icons/thruster-upgrade.png",
-
 }
-
 
 class Upgrade:
     def __init__(self, x, y, card_type, title, description, icon):
@@ -141,9 +138,8 @@ class Upgrade:
             ["Passive", "Vitality Boost", "Core integrity boosted.", load_image_alpha(upgrade_icon_map["Increased Health"])],
             ["Passive", "Fortified Shield", "Shield capacity boosted.", load_image_alpha(upgrade_icon_map["Fortified Shield"])],
             ["Passive", "Thruster Optimization", "Enhanced thrust output.", load_image_alpha(upgrade_icon_map["Thruster Optimization"])],
-            ["Passive", "Faster Reload", "Reload systems optimized.", load_image_alpha(upgrade_icon_map["Faster Reload"])],
+            ["Passive", "Faster Rate of Fire", "Faster weapon firing rate.", load_image_alpha(upgrade_icon_map["Faster Rate of Fire"])],
             ["Passive", "Damage Boost", "Weapon output amplified.", load_image_alpha(upgrade_icon_map["Damage Boost"])],
-            ["Health", "Repair Pack", "Restore 50% HP.", load_image_alpha(upgrade_icon_map["Health Pack"])],
             ["Health", "Shield Regen", "Faster shield recovery.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
             ["Ramming", "Reinforced Hull", "Increased RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
             ["Max Ammo", "Ammo Cache", "Ammo reserves expanded.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
@@ -159,16 +155,17 @@ class Upgrade:
     def apply_upgrade(player, weapons, upgrade_title):
         if upgrade_title == "Vitality Boost":
             player.max_health *= 1.2
+            player.health = player.max_health
 
         elif upgrade_title == "Fortified Shield":
-            player.max_shield *= 1.4
+            player.max_shield *= 1.2
             player.shield = player.max_shield
 
         elif upgrade_title == "Thruster Optimization":
             player.max_speed += 2
             player.thrust_power += 0.1
 
-        elif upgrade_title == "Faster Reload":
+        elif upgrade_title == "Faster Rate of Fire":
             # Apply to current weapon and all queued weapons
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
@@ -183,11 +180,6 @@ class Upgrade:
                 if weapon is not None:
                     weapon.damage = int(weapon.damage * 1.35)
 
-        elif upgrade_title == "Repair Pack":
-                player.health += (player.max_health//2)
-                if player.health > player.max_health:
-                    player.health = player.max_health
-
         elif upgrade_title == "Shield Regen":
                 player.shield_regeneration += 0.05
                 player.shield_regen_delay -= 15
@@ -197,7 +189,7 @@ class Upgrade:
                 player.max_shield += 15
                 player.shield = player.max_shield
 
-        elif upgrade_title == "Explosive Shot":
+        elif upgrade_title == "Rocket Explosive Shot":
             # Only affects Rockets - increases explosion radius
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
@@ -208,16 +200,13 @@ class Upgrade:
                     weapon.damage = old_damage * 1.2
                     weapon.explosion_radius *= 1.5
 
-        elif upgrade_title == "Shotgun fire rate":
+        elif upgrade_title == "Shotgun Pellet Scatter":
             # Only affects Shotgun - increases spread
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon.name == "Shotgun":
-                    weapon.rate += -100
                     weapon.bullet_count += 2
-                    if weapon.rate < 100:
-                        weapon.rate = 100
-                    print(f"Shotgun spread increased to {weapon.spread}")
+                    weapon.spread += 5
 
         elif upgrade_title == "Railgun Piercing Shot":
             # Railgun gets damage boost and pierce
@@ -226,7 +215,7 @@ class Upgrade:
                 if weapon.name == "Rail Gun":
                     if weapon is not None:
                         weapon.bullet_piercing = True
-                        weapon.damage = int(weapon.damage * 1.2)
+                        weapon.pierce_level += 1
 
         elif upgrade_title == "Ammo Cache":
             weapons.max_ammo_bonus = int(weapons.max_ammo_bonus * 1.25)
