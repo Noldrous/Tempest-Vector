@@ -62,13 +62,6 @@ class Game:
             "upgrade": pygame.mixer.Sound("assets/audio/sfx/UI/upgrade.wav"),
         }
 
-        self.announcer = {
-            "Machine Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_machinegun.wav"),
-            "Rail Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_railgun.wav"),
-            "Shotgun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_shotgun.wav"),
-            "Rockets": pygame.mixer.Sound("assets/audio/sfx/player/announcer_rocket.wav"),
-        }
-
         self.music = {
             "menu": "assets/audio/music/menu_music.mp3",
             "game": "assets/audio/music/game_music.mp3"
@@ -542,7 +535,6 @@ class Game:
                 firing = False
                 weapons.cycle_weapon()
                 player.weapon = weapons.main
-                self.announcer[player.weapon.name].play()
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)

@@ -165,7 +165,6 @@ class Weapon:
             self.shoot_sounds.play()
             self.ammo -= 1
             
-
             return self.create_bullets(x, y, angle)
     
     def create_bullets(self, x, y, angle):
@@ -194,7 +193,7 @@ class MachineGun(Weapon):
         super().__init__(
             name='Machine Gun',
             bullet_speed=30,
-            ammo=50,
+            ammo=25,
             rate=90,
             damage=10,
             bullet_size=6,
@@ -209,7 +208,7 @@ class Shotgun(Weapon):
         super().__init__(
             name='Shotgun',
             bullet_speed=30,
-            ammo=10,
+            ammo=7,
             rate=800,
             damage=40,
             bullet_size=8,
@@ -224,7 +223,7 @@ class RailGun(Weapon):
         super().__init__(
             name='Rail Gun',
             bullet_speed=80,
-            ammo=7,
+            ammo=5,
             rate=700,
             damage=100,
             bullet_size=15,
@@ -241,7 +240,7 @@ class Rockets(Weapon):
         super().__init__(
             name='Rockets',
             bullet_speed=40,
-            ammo=3,
+            ammo=2,
             rate=1000,
             damage=200,
             bullet_size=16,
@@ -256,6 +255,7 @@ class Weapons:
     def __init__(self, cycle_delay=2000):
         self.queue = [MachineGun(), Shotgun(), RailGun(), Rockets()]
         self.main = random.choice(self.queue)
+        self.queue.remove(self.main)
         self.cycle_delay = cycle_delay  # Delay in milliseconds
         self.last_cycle_time = pygame.time.get_ticks()
         self.message_time = 0  # Time when message should be displayed
@@ -264,10 +264,17 @@ class Weapons:
         
         # Store original ammo for each weapon type
         self.original_ammo = {
-            'Machine Gun': 50,
-            'Shotgun': 10,
-            'Rail Gun': 7,
-            'Rockets': 3
+            'Machine Gun': 25,
+            'Shotgun': 7,
+            'Rail Gun': 5,
+            'Rockets': 2
+        }
+
+        self.announcer = {
+            "Machine Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_machinegun.wav"),
+            "Rail Gun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_railgun.wav"),
+            "Shotgun": pygame.mixer.Sound("assets/audio/sfx/player/announcer_shotgun.wav"),
+            "Rockets": pygame.mixer.Sound("assets/audio/sfx/player/announcer_rocket.wav"),
         }
 
     def can_cycle_weapon(self):
@@ -293,10 +300,12 @@ class Weapons:
         old_weapon = self.main
         
         # Reload the old weapon to full ammo
-        old_weapon.ammo = self.original_ammo[old_weapon.name] + self.max_ammo_bonus
+        old_weapon.ammo = self.original_ammo[old_weapon.name] 
         
         # Add reloaded weapon back to the end of the queue
         self.queue.append(old_weapon)
 
         # Pull the next weapon from the front of the queue
         self.main = self.queue.pop(0)
+
+        self.announcer[self.main.name].play()

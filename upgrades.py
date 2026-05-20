@@ -140,9 +140,9 @@ class Upgrade:
             ["Passive", "Thruster Optimization", "Enhanced thrust output.", load_image_alpha(upgrade_icon_map["Thruster Optimization"])],
             ["Passive", "Faster Rate of Fire", "Faster weapon firing rate.", load_image_alpha(upgrade_icon_map["Faster Rate of Fire"])],
             ["Passive", "Damage Boost", "Weapon output amplified.", load_image_alpha(upgrade_icon_map["Damage Boost"])],
-            ["Health", "Shield Regen", "Faster shield recovery.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
-            ["Ramming", "Reinforced Hull", "Increased RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
-            ["Max Ammo", "Ammo Cache", "Ammo reserves expanded.", load_image_alpha(upgrade_icon_map["Ammo Cache"])]
+            ["Passive", "Ammo Cache", "Ammo reserves expanded.", load_image_alpha(upgrade_icon_map["Ammo Cache"])],
+            ["Passive", "Shield Regen", "Faster shield recovery.", load_image_alpha(upgrade_icon_map["Shield Regen"])],
+            ["Passive", "Reinforced Hull", "Increased RAMMING damage.", load_image_alpha(upgrade_icon_map["Reinforced Hull"])],
         ]
 
         selected_upgrade = random.sample(upgrades, 3)
@@ -218,8 +218,8 @@ class Upgrade:
                         weapon.pierce_level += 1
 
         elif upgrade_title == "Ammo Cache":
-            weapons.max_ammo_bonus = int(weapons.max_ammo_bonus * 1.25)
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon is not None:
-                    weapon.ammo = int(weapon.ammo * 1.25)
+                    weapons.original_ammo[weapon.name] = math.ceil(weapons.original_ammo[weapon.name] * 1.25)
+                    weapon.ammo = weapons.original_ammo[weapon.name]
