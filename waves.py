@@ -29,7 +29,7 @@ class WaveManager:
         self.is_boss_wave = (self.current_wave % 10 == 0)
 
         if self.is_boss_wave:
-            self.enemy_count = 1  
+            self.enemy_count = 1
         else:
             self.enemy_count = min(int(self.base_count * (1.225 ** self.current_wave)), 67)
 

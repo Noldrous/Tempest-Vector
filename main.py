@@ -453,7 +453,6 @@ class Game:
 
         boost_played = False
         music_started = False
-        announcer_played = False
 
         while True:
             dt = self.clock.tick(60) / 1000.0
@@ -540,12 +539,10 @@ class Game:
 
             # weapon swap check
             if player.weapon.ammo <= 0:
-                announcer_played = False
+                firing = False
                 weapons.cycle_weapon()
                 player.weapon = weapons.main
-                if not announcer_played:
-                    self.announcer[weapons.main.name].play() 
-                    announcer_played = True
+                self.announcer[player.weapon.name].play()
 
             for bullet in player_bullets:
                 bullet.update(all_enemies)

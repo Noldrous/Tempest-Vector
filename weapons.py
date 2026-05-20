@@ -162,8 +162,9 @@ class Weapon:
                 return []
 
             self.last_shot = pygame.time.get_ticks()
-            self.ammo -= 1
             self.shoot_sounds.play()
+            self.ammo -= 1
+            
 
             return self.create_bullets(x, y, angle)
     
