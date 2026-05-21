@@ -155,7 +155,7 @@ class Player:
             self.boosting = False
             self.velocity *= self.friction
 
-            # 🔊 Stop boost sound when released
+            #Stop boost sound when released
             if self.boost_sound_playing:
                 self.boost_sound.stop()
                 self.boost_sound_playing = False
