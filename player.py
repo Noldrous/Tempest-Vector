@@ -52,6 +52,8 @@ class Player:
 
         self.boost_sound = pygame.mixer.Sound("assets/audio/sfx/player/thrust.mp3")
         self.boost_sound_playing = False
+        
+        self.firing = False
 
     @property
     def ramming_damage(self):
@@ -220,12 +222,15 @@ class Player:
         )
         self.velocity += recoil * strength
 
-    def shoot(self, weapon, player_bullets, weapons, firing):
+    def shoot(self, weapon, player_bullets, weapons):
         if weapon is None or self.entering:
             return
 
-        if firing and not weapons.should_show_message():
-            bullets = weapon.shoot(self.ship_pos.x, self.ship_pos.y, self.angle)
+        mouse_buttons = pygame.mouse.get_pressed()
+    
+        if mouse_buttons[0] and not weapons.should_show_message():
+            self.firing = True
+            bullets = weapon.shoot(self.ship_pos.x, self.ship_pos.y, self.angle, self.firing)
 
             if bullets:
                 player_bullets.extend(bullets)
@@ -241,6 +246,10 @@ class Player:
                 }
 
                 self.apply_recoil(self.angle, recoil_strength.get(weapon.name, 3))
+
+        else:
+            self.firing = False
+            
 
     def entrance(self):
         target = pygame.Vector2(width // 2, height // 2)

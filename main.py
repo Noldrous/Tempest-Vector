@@ -527,8 +527,7 @@ class Game:
             shield_bar.draw(ui_surface, player.shield, player.max_shield)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            firing = pygame.mouse.get_pressed()[0] 
-            player.shoot(player.weapon, player_bullets, weapons, firing)
+            player.shoot(player.weapon, player_bullets, weapons)
 
             # weapon swap check
             if player.weapon.ammo <= 0:

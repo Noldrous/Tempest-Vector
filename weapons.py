@@ -157,7 +157,7 @@ class Weapon:
         current_time = pygame.time.get_ticks()
         return self.ammo > 0 and (current_time - self.last_shot) >= self.rate
 
-    def shoot(self, x, y, angle ):
+    def shoot(self, x, y, angle, firing=False):
             if not self.can_shoot():
                 return []
 
@@ -202,6 +202,20 @@ class MachineGun(Weapon):
             bullet_lifetime=90,
         )
         self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/machinegun.mp3")
+    
+    def shoot(self, x, y, angle, firing):
+            if not self.can_shoot():
+                return []
+
+            self.last_shot = pygame.time.get_ticks()
+            if firing:
+                self.shoot_sounds.play(-1, maxtime=500)
+            else:
+                self.shoot_sounds.stop()
+                
+            self.ammo -= 1
+            
+            return self.create_bullets(x, y, angle)
     
 class Shotgun(Weapon):
     def __init__(self):
