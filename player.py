@@ -17,15 +17,15 @@ class Player:
         self.last_damage_timer = 0
 
         self.ram_damage = 10
-        self.thrust_power = 0.2
-        self.max_speed = 9
-
+        self.thrust_power = 0.3
+        self.max_speed = 5
+        self.turn_speed = 0.05
+        
         self.velocity = pygame.Vector2(0, 0)
+        self.angular_velocity = 0
         self.friction = 0.99
         self.angle = 0
-        self.turn_speed = 0.09
-        self.angular_velocity = 0
-
+        
         self.entering = True
 
         self.particles = []

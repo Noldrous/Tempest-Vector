@@ -18,12 +18,12 @@ class Enemy:
         self.health -= damage
 
 class Enemy_Bullet:
-    def __init__(self, pos, direction, damage, radius):
+    def __init__(self, pos, direction, damage, radius, bullet_speed):
         self.pos = pygame.Vector2(pos)
-        self.vel = direction.normalize() * 10
+        self.vel = direction.normalize() * bullet_speed
         self.radius = radius
         self.damage = damage
-        self.lifetime = 120
+        self.lifetime = 540
 
     def update(self):
         self.pos += self.vel
@@ -43,6 +43,7 @@ class SeekerEnemy(Enemy):
         self.health = self.max_health
         self.base_damage = 10
         self.base_speed = 3
+        self.knockback_force  = 10
         self.hit_radius = 30
         self.killed_score = 10
 
@@ -109,6 +110,7 @@ class EliteSeekerEnemy(SeekerEnemy):
         self.health = self.max_health
         self.base_damage = 12
         self.base_speed = 4
+        self.knockback_force  = 15 
         self.hit_radius = 30
         self.killed_score = 20
 
@@ -132,6 +134,7 @@ class ShooterEnemy(Enemy):
         self.health = self.max_health
         self.base_damage = 5
         self.base_speed = 3
+        self.knockback_force = 5
         self.hit_radius = 40
         self.killed_score = 10
 
@@ -202,7 +205,7 @@ class ShooterEnemy(Enemy):
 
             if self.state_timer % 25 == 0:
                 bullet_pos = self.pos + forward * 15
-                bullet1 = Enemy_Bullet(bullet_pos, forward, self.final_damage, 6)
+                bullet1 = Enemy_Bullet(bullet_pos, forward, self.final_damage, 6, 7)
                 self.shoot_sounds.play()
                 self.bullets.append(bullet1)
                 
@@ -296,6 +299,7 @@ class EliteShooterEnemy(ShooterEnemy):
         self.health = self.max_health
         self.base_damage = 4
         self.base_speed = 4
+        self.knockback_force = 15
         self.hit_radius = 40
         self.killed_score = 20
 
@@ -355,10 +359,10 @@ class EliteShooterEnemy(ShooterEnemy):
                 offset = 8
                 bullet_pos = self.pos + forward * 15
                 if (self.state_timer // 20) % 2 == 0:
-                    bullet = Enemy_Bullet(bullet_pos + side * offset, forward, self.final_damage, 4)
+                    bullet = Enemy_Bullet(bullet_pos + side * offset, forward, self.final_damage, 4, 10)
                     self.shoot_sounds.play()
                 else:
-                    bullet = Enemy_Bullet(bullet_pos - side * offset, forward, self.final_damage, 4)
+                    bullet = Enemy_Bullet(bullet_pos - side * offset, forward, self.final_damage, 4, 10)
                     self.shoot_sounds.play()
 
                 self.bullets.append(bullet)
@@ -442,6 +446,7 @@ class TeleporterEnemy(Enemy):
         self.health = self.max_health
         self.base_damage = 6
         self.base_speed = 100
+        self.knockback_force = 12
         self.hit_radius = 30
         self.killed_score = 15
 
@@ -515,7 +520,7 @@ class TeleporterEnemy(Enemy):
                     direction = forward.rotate(i * angle_step)
 
                     self.bullets.append(
-                    Enemy_Bullet(self.pos, direction, self.final_damage, 7))
+                    Enemy_Bullet(self.pos, direction, self.final_damage, 7, 4))
                     
             drift = pygame.Vector2(
                 random.uniform(-0.05,0.05),
@@ -583,10 +588,11 @@ class TeleporterEnemy(Enemy):
 class ChargerBoss(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.max_health = 14000
+        self.max_health = 9500
         self.health = self.max_health
-        self.base_damage = 1.4
+        self.base_damage = 1.25
         self.base_speed = 3
+        self.knockback_force = 25
         self.hit_radius = 90
         self.killed_score = 50
 
@@ -666,15 +672,14 @@ class ChargerBoss(Enemy):
 
             if distance > 5:
                 direction = direction.normalize()
-                self.pos += direction * 15  # entry speed (adjust feel here)
+                self.pos += direction * 5  
             else:
                 self.state = "aim"
                 self.state_timer = 0
                 self.frame = 0
 
-            # optional: still rotate toward target for drama
-            dx = player_pos.x - self.pos.x
-            dy = player_pos.y - self.pos.y
+            dx = self.enter_target.x - self.pos.x
+            dy = self.enter_target.y - self.pos.y
             target_angle = math.atan2(dy, dx)
 
             diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
@@ -682,6 +687,7 @@ class ChargerBoss(Enemy):
             self.angle += max(-self.turn_speed, min(self.turn_speed, diff))
 
             return
+        
         # -------------------
         # AIM STATE
         # -------------------
@@ -746,7 +752,7 @@ class ChargerBoss(Enemy):
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
 
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, 5, 7))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, 20, 7, 4))
 
             if self.state_timer > self.recovery_time:
                 self.state = "aim"
@@ -784,13 +790,18 @@ class ChargerBoss(Enemy):
         pygame.draw.rect(screen, (255, 40, 40), (bar_x, bar_y, current_width, bar_height), border_radius=10)
         pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 3, border_radius=10)
 
+    def take_damage(self, damage):
+        if self.state != "enter":
+            self.health -= damage
+
 class MotherShip(Enemy):
     def __init__(self):
         super().__init__(width // 2, height // 2)
-        self.max_health = 15000
+        self.max_health = 11000
         self.health = self.max_health
-        self.base_damage = 10
+        self.base_damage = 8
         self.base_speed = 0
+        self.knockback_force = 10
         self.hit_radius = 90
         self.killed_score = 75
 
@@ -862,43 +873,57 @@ class MotherShip(Enemy):
             self.state_timer = 0
 
         if self.state_timer < 300:
-            self.angle += 1
-            self.shoot_timer += 1
+            if self.health > self.max_health * 0.4:
+                self.angle -= 0.5
+                self.shoot_timer += 1
+            else:
+                self.angle -= 1.25
+                self.shoot_timer += 2
+            
+            if self.shoot_timer >= 4:
+                self.shoot_timer = 0
 
-            if self.shoot_timer % 5 == 0: 
+            if self.shoot_timer % 4 == 0: 
                 bullet_count = 8
                 angle_step = 360 / bullet_count
                 self.shoot_sound.play()
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle + i * angle_step)
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 6))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 8, 8))
 
         elif self.state_timer < 600:
-            self.angle -= 1
-            self.shoot_timer += 1
+            if self.health > self.max_health * 0.4:
+                self.angle += 0.5
+                self.shoot_timer += 1
+            else:
+                self.angle += 1.25
+                self.shoot_timer += 2
 
-            if self.shoot_timer % 5 == 0:
+            if self.shoot_timer >= 4:
+                self.shoot_timer = 0
+
+            if self.shoot_timer % 4 == 0:
                 bullet_count = 8
                 angle_step = 360 / bullet_count
-                self.shoot_sound.play()
+                self.shoot_sound.play(maxtime=200)
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle + i * angle_step)
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 6))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 8, 8))
 
         elif self.state_timer < 750:
             self.angle1 += 1
             self.shoot_timer1 += 1
 
-            if self.shoot_timer1 % 20 == 0: 
+            if self.shoot_timer1 % 15 == 0: 
                 bullet_count = 4
                 angle_step = 360 / bullet_count
-                self.shoot_sound.play()
+                self.shoot_sound.play(maxtime=200)
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle1 + i * angle_step)
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 6))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage * 1.5, 6, 10))
 
             self.angle2 -= 1
             self.shoot_timer2 += 1
@@ -906,11 +931,11 @@ class MotherShip(Enemy):
             if self.shoot_timer2 % 10 == 0:
                 bullet_count = 4
                 angle_step = 360 / bullet_count
-                self.shoot_sound.play()
+                self.shoot_sound.play(maxtime=200)
 
                 for i in range(bullet_count):
                     direction = pygame.Vector2(1, 0).rotate(self.angle2 + i * angle_step)
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage, 6))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, self.final_damage * 1.5, 6, 10))
 
         self.bullets = [b for b in self.bullets if b.alive()]
         for bullet in self.bullets:
@@ -935,3 +960,7 @@ class MotherShip(Enemy):
         pygame.draw.rect(screen, (60, 0, 0), (bar_x, bar_y, bar_width, bar_height), border_radius=10)
         pygame.draw.rect(screen, (255, 40, 40), (bar_x, bar_y, current_width, bar_height), border_radius=10)
         pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 3, border_radius=10)
+
+    def take_damage(self, damage):
+        if self.active:
+            self.health -= damage

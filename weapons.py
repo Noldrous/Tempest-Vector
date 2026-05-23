@@ -43,7 +43,7 @@ def load_bullet_sheets():
 
 
 class Bullet:
-    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None, bullet_piercing=False, pierce_level=0, explosion_radius=0, is_homing=False, seek_range=1000,image=None, weapon_name='Machine Gun'):
+    def __init__(self, x, y, angle, speed=20, size=0, lifetime=150, damage=10, max_distance=None,bullet_bounce=False, bounce_count=0, bullet_piercing=False, pierce_level=0, explosion_radius=0, is_homing=False, seek_range=1000,image=None, weapon_name='Machine Gun'):
         self.pos = pygame.Vector2(x, y)
         self.start_pos = pygame.Vector2(x, y)
         self.angle = angle
@@ -51,6 +51,8 @@ class Bullet:
         self.radius = size
         self.lifetime = lifetime
         self.damage = damage
+        self.bounce = bullet_bounce
+        self.bounce_count = bounce_count
         self.piercing = bullet_piercing
         self.pierce_level = pierce_level
         self.max_distance = max_distance
@@ -103,6 +105,37 @@ class Bullet:
                     self.velocity = self.velocity.lerp(target_dir * self.velocity.length(), 0.12)
                     # Update angle for homing bullets
                     self.angle = math.atan2(self.velocity.y, self.velocity.x)
+
+        if self.bounce:
+
+            bounced = False
+
+            if self.pos.x <= 0:
+                self.pos.x = 0
+                self.velocity.x *= -1
+                bounced = True
+
+            elif self.pos.x >= width:
+                self.pos.x = width
+                self.velocity.x *= -1
+                bounced = True
+
+            if self.pos.y <= 0:
+                self.pos.y = 0
+                self.velocity.y *= -1
+                bounced = True
+
+            elif self.pos.y >= height:
+                self.pos.y = height
+                self.velocity.y *= -1
+                bounced = True
+
+            if bounced:
+                self.angle = math.atan2(self.velocity.y, self.velocity.x)
+                self.bounce_count -= 1
+
+                if self.bounce_count < 0:
+                    self.lifetime = 0
         
         self.pos += self.velocity
         self.lifetime -= 1
@@ -113,7 +146,7 @@ class Bullet:
         scale = data.get("scale", 1)
         img = sheet.get_image(self.anim_frame, 0, data["width"], data["height"], scale)
         
-        # Rotate bullet to match direction of travel (convert radians to degrees)
+        # Rotate bullets to match direction of travel (convert radians to degrees)
         # Subtract 90 degrees because the sprite sheet assumes right-facing bullets
         degrees = math.degrees(self.angle)
         rotated = pygame.transform.rotate(img, -degrees - 90)
@@ -137,7 +170,7 @@ class Bullet:
         return True
     
 class Weapon:
-    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_piercing=False, pierce_level=0, explosion_radius=0):
+    def __init__(self, name, bullet_speed, ammo, rate, damage, bullet_size, spread, bullet_count, bullet_lifetime, bullet_range=None, bullet_bounce=False, bounce_count=0, bullet_piercing=False, pierce_level=0, explosion_radius=0):
         self.name = name
         self.bullet_speed =  bullet_speed
         self.ammo = ammo
@@ -148,6 +181,8 @@ class Weapon:
         self.bullet_count = bullet_count
         self.bullet_lifetime = bullet_lifetime
         self.bullet_range = bullet_range if bullet_range is not None else bullet_speed * bullet_lifetime
+        self.bullet_bounce = bullet_bounce
+        self.bounce_count = bounce_count
         self.bullet_piercing = bullet_piercing
         self.pierce_level = pierce_level
         self.explosion_radius = explosion_radius
@@ -180,6 +215,8 @@ class Weapon:
                 self.bullet_lifetime,
                 self.damage,
                 max_distance=self.bullet_range,
+                bullet_bounce=self.bullet_bounce,
+                bounce_count=self.bounce_count,
                 bullet_piercing = self.bullet_piercing,
                 pierce_level = self.pierce_level,
                 explosion_radius=self.explosion_radius,
@@ -194,12 +231,14 @@ class MachineGun(Weapon):
             name='Machine Gun',
             bullet_speed=30,
             ammo=25,
-            rate=90,
-            damage=10,
+            rate=125,
+            damage=15,
             bullet_size=6,
             spread=7,
             bullet_count=3,
-            bullet_lifetime=90,
+            bullet_lifetime=120,
+            bullet_bounce=False,
+            bounce_count=0
         )
         self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/machinegun.mp3")
     
@@ -222,13 +261,13 @@ class Shotgun(Weapon):
         super().__init__(
             name='Shotgun',
             bullet_speed=30,
-            ammo=7,
+            ammo=5,
             rate=800,
-            damage=40,
+            damage=50,
             bullet_size=8,
             spread=50,
             bullet_count=8,
-            bullet_lifetime=17,
+            bullet_lifetime=14,
         )
         self.shoot_sounds = pygame.mixer.Sound("assets/audio/sfx/player/shotgun.mp3")
 
@@ -237,9 +276,9 @@ class RailGun(Weapon):
         super().__init__(
             name='Rail Gun',
             bullet_speed=80,
-            ammo=5,
+            ammo=3,
             rate=700,
-            damage=100,
+            damage=150,
             bullet_size=15,
             spread=0,
             bullet_count=1,
@@ -254,7 +293,7 @@ class Rockets(Weapon):
         super().__init__(
             name='Rockets',
             bullet_speed=40,
-            ammo=2,
+            ammo=1,
             rate=1000,
             damage=200,
             bullet_size=16,

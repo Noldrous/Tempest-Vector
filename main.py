@@ -31,6 +31,10 @@ class Game:
             "title": load_image_alpha('ui/title.png'),
             "play_button1": load_image_alpha('ui/button_play.png'),
             "play_button2": load_image_alpha('ui/hoveredButton_play.png'),
+            "tutorial_button1": load_image_alpha('ui/button_tutorial.png'),
+            "tutorial_button2": load_image_alpha('ui/hoveredButton_tutorial.png'),
+            "tutorial_image": load_image_alpha('ui/tutorial.png'),
+            "back_button": load_image_alpha('ui/back_button.png'),
             "quit_button1": load_image_alpha('ui/button_quit.png'),
             "quit_button2": load_image_alpha('ui/hoveredButton_quit.png'),
             "resume_button1": load_image_alpha('ui/resume1.png'),
@@ -99,8 +103,14 @@ class Game:
         title = pygame.transform.scale(self.assets["title"], (self.width // 1.6, self.height // 2.5))
         play1 = pygame.transform.scale(self.assets["play_button1"], (self.width // 8, self.height // 14))
         play2 = pygame.transform.scale(self.assets["play_button2"], (self.width // 8, self.height // 14))
+        tutorial1 = pygame.transform.scale(self.assets["tutorial_button1"], (self.width // 8, self.height // 14))
+        tutorial2 = pygame.transform.scale(self.assets["tutorial_button2"], (self.width // 8, self.height // 14))
+        tutorial_image = pygame.transform.scale(self.assets["tutorial_image"], (self.width // 1.6, self.height // 1.5))
+        back = self.assets["back_button"]
         quit1 = pygame.transform.scale(self.assets["quit_button1"], (self.width // 8, self.height // 14))
         quit2 = pygame.transform.scale(self.assets["quit_button2"], (self.width // 8, self.height // 14))
+        
+        
 
         sprite_sheet = SpriteSheet(self.assets["player_ship"])
         menu_frames = []
@@ -117,11 +127,15 @@ class Game:
         ship = pygame.transform.scale(self.assets["player_ship"], (240, 240))
         ship = pygame.transform.rotate(ship, -90)
         
-        play_rect = play1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 5))
+        play_rect = play1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 3.5))
+        tutorial_rect = tutorial1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 5))
+        tutorial_rect_img = tutorial_image.get_rect(center=(self.width // 2, self.height // 2))
+        back_rect = back.get_rect(topright=(self.width - 40, 40))
         quit_rect = quit1.get_rect(bottomleft=(self.width - self.width // 5, self.height - self.height // 9))
         title_rect = title.get_rect(topleft=(50, 50))
 
         play_pressed = False
+        tutorial_pressed = False
 
         shadow1_speed = 4
         shadow2_speed = 1
@@ -153,14 +167,29 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_buttons = pygame.mouse.get_pressed()
-                    if play_rect.collidepoint(mouse) and mouse_buttons[0]:
-                        pygame.mixer.music.stop()
-                        self.sfx["click"].play()
-                        play_pressed = True
-                            
-                    if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
-                        pygame.quit()
-                        sys.exit()
+
+                    # NORMAL MENU
+                    if not tutorial_pressed:
+
+                        if play_rect.collidepoint(mouse) and mouse_buttons[0]:
+                            pygame.mixer.music.stop()
+                            self.sfx["click"].play()
+                            play_pressed = True
+
+                        if tutorial_rect.collidepoint(mouse) and mouse_buttons[0]:
+                            self.sfx["click"].play()
+                            tutorial_pressed = True
+
+                        if quit_rect.collidepoint(mouse) and mouse_buttons[0]:
+                            pygame.quit()
+                            sys.exit()
+
+                    # TUTORIAL SCREEN
+                    else:
+                        if back_rect.collidepoint(mouse) and mouse_buttons[0]:
+                            self.sfx["click"].play()
+                            tutorial_pressed = False
+
             
             if play_pressed:
                 shadow1_speed = 8
@@ -169,6 +198,7 @@ class Game:
                 star1_speed = 8
                 star2_speed = 6
                 play_rect.x += 15
+                tutorial_rect.x += 15
                 quit_rect.x += 15
                 title_rect.x -= 25
 
@@ -181,9 +211,6 @@ class Game:
                     self.game()
 
             self.screen.blit(self.background, (0, 0))
-
-            play_button = play2 if play_rect.collidepoint(mouse) else play1
-            quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
             
             self.setbackground("shadow1", shadow1_speed, 0, 360, 720, 1080, 1440)
             self.setbackground("shadow2", shadow2_speed, 0, 360, 720, 1080, 1440)
@@ -192,46 +219,59 @@ class Game:
             self.setbackground("celestial3", celestials, 500, self.height, self.height, self.height, self.height)
             self.setbackground("star1", star1_speed, 0, 360, 720, 1080, 1440)
             self.setbackground("star2", star2_speed, 0, 360, 720, 1080, 1440)
-            
-            sway_time += dt
 
-            offset_x = math.sin(sway_time * 2) * 10
-            offset_y = math.cos(sway_time * 1.5) * 30
+            if tutorial_pressed:
+                # dark overlay
+                overlay = pygame.Surface((self.width, self.height))
+                overlay.set_alpha(180)
+                overlay.fill((0, 0, 0))
+                self.screen.blit(overlay, (0, 0))
+                self.screen.blit(tutorial_image, tutorial_rect_img)
+                self.screen.blit(back, back_rect)
 
-            ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
+            else:
+                play_button = play2 if play_rect.collidepoint(mouse) else play1
+                tutorial_button = tutorial2 if tutorial_rect.collidepoint(mouse) else tutorial1
+                quit_button = quit2 if quit_rect.collidepoint(mouse) else quit1
 
-            #particle
-            if ship_move_x < width//2:  
-                pos = pygame.Vector2(
-                    ship_rect.left + 75,
-                    ship_rect.centery - 3
-                )
+                offset_x = math.sin(sway_time * 2) * 10
+                offset_y = math.cos(sway_time * 1.5) * 30
 
-                vel = pygame.Vector2(
-                    random.uniform(-3, -1),
-                    random.uniform(-1, 1)
-                )
+                ship_rect = ship.get_rect(topleft=(ship_base_x + ship_move_x + offset_x, ship_y + offset_y))
 
-                ship_particles.append(Particle(pos, vel))
-            for particle in ship_particles:
-                particle.update()
-            ship_particles[:] = [p for p in ship_particles if p.life > 0]
-            for particle in ship_particles:
-                particle.draw(self.screen)
-            
-            #animation
-            menu_frame_index += menu_anim_speed
-            if menu_frame_index >= len(menu_frames):
-                menu_frame_index = 0
+                #particle
+                if ship_move_x < width//2:  
+                    pos = pygame.Vector2(
+                        ship_rect.left + 75,
+                        ship_rect.centery - 3
+                    )
 
-            ship = menu_frames[int(menu_frame_index)]
+                    vel = pygame.Vector2(
+                        random.uniform(-3, -1),
+                        random.uniform(-1, 1)
+                    )
 
-            self.screen.blit(ship, ship_rect)
-            
-            self.screen.blit(title, title_rect)
+                    ship_particles.append(Particle(pos, vel))
+                for particle in ship_particles:
+                    particle.update()
+                ship_particles[:] = [p for p in ship_particles if p.life > 0]
+                for particle in ship_particles:
+                    particle.draw(self.screen)
+                
+                #animation
+                menu_frame_index += menu_anim_speed
+                if menu_frame_index >= len(menu_frames):
+                    menu_frame_index = 0
 
-            self.screen.blit(play_button, play_rect)
-            self.screen.blit(quit_button, quit_rect)
+                ship = menu_frames[int(menu_frame_index)]
+
+                self.screen.blit(ship, ship_rect)
+                
+                self.screen.blit(title, title_rect)
+
+                self.screen.blit(play_button, play_rect)
+                self.screen.blit(tutorial_button, tutorial_rect)
+                self.screen.blit(quit_button, quit_rect)
 
             pygame.display.update()
             
@@ -277,8 +317,7 @@ class Game:
                         self.score = 0
                         self.game()
                     if quit_rect.collidepoint(mouse):
-                        pygame.quit()
-                        sys.exit()
+                        self.start_menu()
 
             if not resume:
                 panel_x = max(target_x, panel_x - anim_speed)
@@ -299,6 +338,31 @@ class Game:
 
             panel_rect = pygame.Rect(panel_x, 0, panel_width, self.height)
             pygame.draw.rect(self.screen, (20, 20, 50), panel_rect)
+            
+            # Grid background
+            grid_size = 25
+            grid_color = (35, 45, 75)
+
+            # Vertical lines
+            for x in range(int(panel_x), int(panel_x + panel_width), grid_size):
+                pygame.draw.line(
+                    self.screen,
+                    grid_color,
+                    (x, 0),
+                    (x, self.height),
+                    1
+                )
+
+            # Horizontal lines
+            for y in range(0, self.height, grid_size):
+                pygame.draw.line(
+                    self.screen,
+                    grid_color,
+                    (panel_x, y),
+                    (panel_x + panel_width, y),
+                    1
+                )
+            
             
             pygame.draw.rect(self.screen, "darkgray", (panel_x, 0, 300, 100), 35)
             pygame.draw.rect(self.screen, "darkgray", (panel_x + 10, 0, 60, 100)) 
@@ -432,6 +496,7 @@ class Game:
 
         # GAME STATE
         show_upgrade_screen = False
+        upgrade_selected = False
         upgrade_trigger_time = 0
         upgrade_fade_alpha = 0
         upgrade_cards = []
@@ -463,22 +528,28 @@ class Game:
                     # if you're not in the event loop.
                     cursor_rect.center = event.pos
 
-                if show_upgrade_screen:
+                if show_upgrade_screen and not upgrade_selected:
                     mouse_pos = pygame.mouse.get_pos()
                     for i, card in enumerate(upgrade_cards):
                         if card.handle_event(event, mouse_pos):
+                            upgrade_selected = True
                             self.sfx["upgrade"].play()
-                            Upgrade.apply_upgrade(player, weapons, card.title)
-                            print(f"Applied upgrade: {card.title}")
-                            upgrade_trigger_time = 0
+
+                            # Animate cards
+                            for other_card in upgrade_cards:
+                                other_card.animating_out = True
+
+                                if other_card == card:
+                                    other_card.selected = True
+                                    other_card.animation_direction = -1  # goes UP
+                                else:
+                                    other_card.animation_direction = 1   # goes DOWN
+
+                            selected_upgrade = card.title
+                            upgrade_animation_start = pygame.time.get_ticks()
                             
-                            # Hide screen and reset for next wave
-                            show_upgrade_screen = False
-                            upgrade_cards = []
-                            wave_manager.upgrades_pending = False
-                            wave_manager.setup_wave()  # Start next wave
-                            break
                 else:
+                    upgrade_selected = False
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             player.boost_sound.stop()
@@ -490,6 +561,7 @@ class Game:
 
             ui_alpha = min(255, ui_alpha + ui_fade_speed * dt)
             ui_surface.fill((0, 0, 0, 0))  # clear with transparency
+            
 
             self.screen.blit(self.background, (0, 0))
             self.setbackground("shadow1", 2, 0, 360, 720, 1080, 1440)
@@ -527,11 +599,11 @@ class Game:
             shield_bar.draw(ui_surface, player.shield, player.max_shield)
 
             # shoot with equipped weapon -------------------------------------------------------------------------------------------------------------------------------------------------------
-            player.shoot(player.weapon, player_bullets, weapons)
+            if not show_upgrade_screen:
+                player.shoot(player.weapon, player_bullets, weapons)
 
             # weapon swap check
             if player.weapon.ammo <= 0:
-                firing = False
                 weapons.cycle_weapon()
                 player.weapon = weapons.main
 
@@ -592,7 +664,6 @@ class Game:
                     clear_msg.set_alpha(int(255 * (delay_progress - 0.5) / 0.9))
                     clear_rect = clear_msg.get_rect(center=(self.width // 2, self.height // 3))
                     self.screen.blit(clear_msg, clear_rect)
-            # all_enemies = wave_manager.all_enemies  # Moved up for bullet homing
 
             current_wave = wave_manager.current_wave
             if current_wave != last_announced_wave:
@@ -665,13 +736,29 @@ class Game:
                         direction = direction.normalize()
 
                         enemy.knockback += direction * 10
-                        player.velocity -= direction * 10
+                        player.velocity -= direction * enemy.knockback_force
 
             # Update and draw explosions
             explosion_group.update()
             explosion_group.draw(self.screen)
             enemy_explosion_group.update()
             enemy_explosion_group.draw(self.screen)
+            
+            # Finish upgrade animation before applying
+            if show_upgrade_screen and 'selected_upgrade' in locals():
+                if pygame.time.get_ticks() - upgrade_animation_start > 700:
+
+                    Upgrade.apply_upgrade(player, weapons, selected_upgrade)
+                    print(f"Applied upgrade: {selected_upgrade}")
+
+                    upgrade_trigger_time = 0
+                    show_upgrade_screen = False
+                    upgrade_cards = []
+
+                    wave_manager.upgrades_pending = False
+                    wave_manager.setup_wave()
+
+                    del selected_upgrade
 
             # UPGRADE SCREEN
             if show_upgrade_screen:
@@ -692,7 +779,7 @@ class Game:
                 # Update and draw cards (cards have their own pop-up animation)
                 for card in upgrade_cards:
                     card.update()
-                    card_surf = card.draw(self.screen, font_large, font_small)  # Get surface for alpha
+                    card_surf = card.draw(ui_surface, font_large, font_small)  # Get surface for alpha
                     if hasattr(card_surf, 'set_alpha'):
                         card_surf.set_alpha(upgrade_fade_alpha)
             if wave_message and (pygame.time.get_ticks() - wave_message_time) < wave_message_duration:
@@ -701,9 +788,9 @@ class Game:
                 self.screen.blit(wave_msg_surface, wave_msg_rect)
             
             pygame.mouse.set_visible(False)
+            self.screen.blit(ui_surface, (0, 0))
             self.screen.blit(self.assets["cursor_scaled"], cursor_rect)
             ui_surface.set_alpha(ui_alpha)
-            self.screen.blit(ui_surface, (0, 0))
             pygame.display.update()
 
 if __name__ == "__main__":
