@@ -185,7 +185,7 @@ class Upgrade:
             player.shield = player.max_shield
 
         elif upgrade_title == "Thruster Optimization":
-            player.max_speed += 4
+            player.max_speed += 2
             player.thrust_power += 0.15
 
         elif upgrade_title == "Burst Overclock":
@@ -201,7 +201,7 @@ class Upgrade:
             all_weapons = weapons.queue + [weapons.main]
             for weapon in all_weapons:
                 if weapon is not None:
-                    weapon.damage = int(weapon.damage * 1.4)
+                    weapon.damage = int(weapon.damage * 1.3)
                 
         elif upgrade_title == "Reinforced Hull":
                 player.ram_damage *= 1.6
@@ -217,6 +217,7 @@ class Upgrade:
                     if weapon is not None:
                         weapon.bullet_bounce = True
                         weapon.bounce_count += 2
+                        weapon.damage = int(weapon.damage * 1.15)
                         weapon.ammo += 10
 
         elif upgrade_title == "Pellet Scatter":
@@ -236,7 +237,7 @@ class Upgrade:
                 if weapon.name == "Rail Gun":
                     if weapon is not None:
                         weapon.bullet_piercing = True
-                        weapon.pierce_level = int(weapon.pierce_level * 1.5)
+                        weapon.pierce_level += 2
                         weapon.ammo += 2
 
         elif upgrade_title == "Explosive Shot":

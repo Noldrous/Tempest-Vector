@@ -34,8 +34,8 @@ class WaveManager:
             self.enemy_count = min(int(self.base_count * (1.225 ** self.current_wave)), 50)
 
         self.spawn_interval = max(0.5, self.spawn_interval - self.current_wave * 0.01)
-        self.speed_multiplier = 1.035 ** self.current_wave
-        self.damage_multiplier = 1.08 ** self.current_wave
+        self.speed_multiplier = 1.015 ** self.current_wave
+        self.damage_multiplier = 1.04 ** self.current_wave
 
     def update(self, delta_time):
         self.spawn_timer += delta_time
@@ -85,7 +85,7 @@ class WaveManager:
 
             enemy.speed_multiplier = self.speed_multiplier
             enemy.damage_multiplier = self.damage_multiplier
-            health_multiplier = 1.75 ** (self.current_wave // 10 - 1)
+            health_multiplier = 2 ** (self.current_wave // 10 - 1)
             enemy.max_health *= health_multiplier
             enemy.health = enemy.max_health
 

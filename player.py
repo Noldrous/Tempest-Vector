@@ -17,8 +17,8 @@ class Player:
         self.last_damage_timer = 0
 
         self.ram_damage = 10
-        self.thrust_power = 0.3
-        self.max_speed = 5
+        self.thrust_power = 0.2
+        self.max_speed = 7
         self.turn_speed = 0.05
         
         self.velocity = pygame.Vector2(0, 0)

@@ -50,7 +50,7 @@ class Game:
             "skull1": load_image_alpha('ui/skull1.png'),
             "skull2": load_image_alpha('ui/skull2.png'),
             "player_ship": load_image_alpha('player/shiper.png'),
-            "cursor": load_image_alpha("ui/crosshair.png"),
+            "cursor": load_image_alpha("ui/crosshair.png"), 
             "cursor_scaled": pygame.transform.scale(load_image_alpha("ui/crosshair.png"), (48, 48))
         }
 
@@ -110,8 +110,6 @@ class Game:
         quit1 = pygame.transform.scale(self.assets["quit_button1"], (self.width // 8, self.height // 14))
         quit2 = pygame.transform.scale(self.assets["quit_button2"], (self.width // 8, self.height // 14))
         
-        
-
         sprite_sheet = SpriteSheet(self.assets["player_ship"])
         menu_frames = []
         frame_width = 48
