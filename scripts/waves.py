@@ -1,5 +1,5 @@
-from settings import *
-from enemy import *
+from .settings import *
+from .enemy import *
 import random
 
 class WaveManager:

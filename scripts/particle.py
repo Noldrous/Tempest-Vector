@@ -1,5 +1,5 @@
-from settings import *
-from spritesheet import *
+from .settings import *
+from .spritesheet import *
 
 class Particle:
     def __init__(self, pos, velocity):

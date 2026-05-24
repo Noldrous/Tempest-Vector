@@ -1,6 +1,6 @@
-from settings import *
-from particle import Particle
-from spritesheet import *
+from .settings import *
+from .particle import Particle
+from .spritesheet import *
 
 class Player:
     def __init__(self, image):

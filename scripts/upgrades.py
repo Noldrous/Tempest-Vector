@@ -1,8 +1,8 @@
-import player
-from settings import *
-from weapons import *
-from player import *
-import weapons
+from . import player
+from .settings import *
+from .weapons import *
+from .player import *
+from . import weapons
 
 CARD_WIDTH = int(width // 3.5)
 CARD_HEIGHT = int(height // 1.25)

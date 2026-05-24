@@ -1,6 +1,6 @@
-from settings import *
+from .settings import *
 import random
-from spritesheet import *
+from .spritesheet import *
 
 
 WEAPON_DATA = {

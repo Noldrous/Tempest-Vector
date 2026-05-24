@@ -1,10 +1,10 @@
-from settings import *
-from player import *
-from enemy import *
-from weapons import *
-from waves import *
-from upgrades import *
-from particle import *
+from scripts.settings import *
+from scripts.player import *
+from scripts.enemy import *
+from scripts.weapons import *
+from scripts.waves import *
+from scripts.upgrades import *
+from scripts.particle import *
 
 class Game:
     def __init__(self):

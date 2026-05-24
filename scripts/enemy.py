@@ -1,5 +1,5 @@
-from settings import *
-import spritesheet
+from .settings import *
+from . import spritesheet
 
 class Enemy:
     def __init__(self, x, y):
@@ -760,7 +760,7 @@ class ChargerBoss(Enemy):
             self.pos += self.velocity
 
             if self.state_timer % 45 == 0:
-                bullet_count = 32
+                bullet_count = 16
                 angle_step = 360 / bullet_count
 
                 forward = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
@@ -769,7 +769,7 @@ class ChargerBoss(Enemy):
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
 
-                    self.bullets.append(Enemy_Bullet(self.pos, direction, 35, 7, 4, self.name))
+                    self.bullets.append(Enemy_Bullet(self.pos, direction, 25, 7, 4, self.name))
 
             if self.state_timer > self.recovery_time:
                 self.state = "aim"
