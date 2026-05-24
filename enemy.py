@@ -205,7 +205,7 @@ class ShooterEnemy(Enemy):
 
             if self.state_timer % 25 == 0:
                 bullet_pos = self.pos + forward * 15
-                bullet1 = Enemy_Bullet(bullet_pos, forward, self.final_damage, 6, 7)
+                bullet1 = Enemy_Bullet(bullet_pos, forward, self.final_damage, 6, 5.5)
                 self.shoot_sounds.play()
                 self.bullets.append(bullet1)
                 
@@ -359,10 +359,10 @@ class EliteShooterEnemy(ShooterEnemy):
                 offset = 8
                 bullet_pos = self.pos + forward * 15
                 if (self.state_timer // 20) % 2 == 0:
-                    bullet = Enemy_Bullet(bullet_pos + side * offset, forward, self.final_damage, 4, 10)
+                    bullet = Enemy_Bullet(bullet_pos + side * offset, forward, self.final_damage, 4, 7)
                     self.shoot_sounds.play()
                 else:
-                    bullet = Enemy_Bullet(bullet_pos - side * offset, forward, self.final_damage, 4, 10)
+                    bullet = Enemy_Bullet(bullet_pos - side * offset, forward, self.final_damage, 4, 7)
                     self.shoot_sounds.play()
 
                 self.bullets.append(bullet)

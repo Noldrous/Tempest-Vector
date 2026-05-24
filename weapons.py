@@ -107,24 +107,20 @@ class Bullet:
                     self.angle = math.atan2(self.velocity.y, self.velocity.x)
 
         if self.bounce:
-
             bounced = False
-
+            
             if self.pos.x <= 0:
                 self.pos.x = 0
                 self.velocity.x *= -1
                 bounced = True
-
             elif self.pos.x >= width:
                 self.pos.x = width
                 self.velocity.x *= -1
                 bounced = True
-
             if self.pos.y <= 0:
                 self.pos.y = 0
                 self.velocity.y *= -1
                 bounced = True
-
             elif self.pos.y >= height:
                 self.pos.y = height
                 self.velocity.y *= -1
