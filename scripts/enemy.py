@@ -759,7 +759,7 @@ class ChargerBoss(Enemy):
             self.velocity *= 0.95
             self.pos += self.velocity
 
-            if self.state_timer % 45 == 0:
+            if self.state_timer % 35 == 0:
                 bullet_count = 16
                 angle_step = 360 / bullet_count
 
@@ -768,7 +768,6 @@ class ChargerBoss(Enemy):
 
                 for i in range(bullet_count):
                     direction = forward.rotate(i * angle_step)
-
                     self.bullets.append(Enemy_Bullet(self.pos, direction, 25, 7, 4, self.name))
 
             if self.state_timer > self.recovery_time:
